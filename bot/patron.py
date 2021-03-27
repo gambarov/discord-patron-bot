@@ -9,6 +9,8 @@ class Patron:
     def __init__(self):
         self.bot = Bot(**options)
         self._load_extensions('commands')
+        self.bot.load_extension('commands.exchange.command')
+        # TODO: events, etc (?)
 
     def run(self, token):
         self.bot.run(token)

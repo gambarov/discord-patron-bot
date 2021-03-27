@@ -2,6 +2,7 @@ import requests
 import json
 
 from discord.ext import commands
+from requests.models import Response
 
 class CourseCommand(commands.Cog):
     def __init__(self, bot):
@@ -28,11 +29,15 @@ class CourseCommand(commands.Cog):
                     message += "{}: {} ({})".format(name, value, diff) + '\n'
 
         # Курс биткоина
-        response = requests.get('https://blockchain.info/ticker')
-        json_data = json.loads(response.text)
-        message += 'Биткоин: {}$'.format(json_data['USD']['buy'])
+        bitcoin_cost = self.get_bitcoin_cost()
+        message += 'Биткоин: {}$'.format(bitcoin_cost)
 
         await context.send(message)
+
+    @staticmethod
+    def get_bitcoin_cost(valute='USD'):
+        response = requests.get('https://blockchain.info/ticker')
+        return json.loads(response.text)[valute]['buy']
 
 
 def setup(bot):
