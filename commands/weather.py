@@ -18,14 +18,14 @@ class WeatherCommand(commands.Cog):
         print(response.text)
 
         if response.status_code != 200:
-            return await context.send('Ошибка№1, попробуйте еще раз позже')
+            return await context.send('Не могу получить погоду по данному городу')
 
         json_data = json.loads(response.text)
         await context.send(self.get_message(json_data))
     
     def get_message(self, data):
         if not 'location' in data:
-            return 'Ошибка№2, попробуйте еще раз позже' 
+            return 'Ошибка№1, попробуйте еще раз позже' 
 
         location = data['location']
         current = data['current']
