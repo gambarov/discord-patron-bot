@@ -11,18 +11,19 @@ class ExchangeCommand(commands.Cog):
         self.bot = bot
         
     @commands.command(name = "биржа", help = "торговля в бирже")
-    async def execute(self, context, *args):
-        # !биржа [подкоманда] [аргумент]
-        if len(args) == 0:
-            return await context.send(self.help())
+    async def execute(self, ctx, subcommand, *, arg=None):
+        # Получаем название подкоманды
+        subcommand_name = self._get_subcommand_name(subcommand)
+        # Пытаемся получить подкоманду
+        command = getattr(self, subcommand_name, 'help') 
+        account = Account(ctx.message.author, CourseCommand.get_bitcoin_cost())
+        # Вызов подкоманды
+        message = command(account, arg)
+        return await ctx.send(message)
 
-        subcommand_name = self._get_subcommand_name(args[0])
-        arg = None if len(args) == 1 else args[1]
-
-        subcommand = getattr(self, subcommand_name, 'help') 
-        account = Account(context.message.author, CourseCommand.get_bitcoin_cost())
-        message = subcommand(account, arg)
-        return await context.send(message)
+    @execute.error
+    async def info_error(self, ctx, error):
+        return await ctx.send(self.help())
 
     def account(self, instance, _=None):
         message = ':moneybag: Ваш счет: {} $'.format(str(instance.get_dollars())) + '\n'
