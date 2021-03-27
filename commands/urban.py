@@ -1,9 +1,5 @@
 import os, requests, json
 
-from dotenv import load_dotenv
-
-load_dotenv()
-
 KEY = os.getenv('WEATHER_KEY')
 
 from discord.ext import commands

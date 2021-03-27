@@ -2,10 +2,6 @@ import os, requests, json
 
 from discord.ext import commands
 
-from dotenv import load_dotenv
-
-load_dotenv()
-
 KEY = os.getenv('WEATHER_KEY')
 
 class WeatherCommand(commands.Cog):

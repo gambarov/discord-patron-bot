@@ -1,9 +1,5 @@
 import os, requests, json
 
-from dotenv import load_dotenv
-
-load_dotenv()
-
 TOKEN = os.getenv('YANDEX_DICT_TOKEN')
 
 from discord.ext import commands

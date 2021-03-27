@@ -1,8 +1,6 @@
 import requests
 import json
 
-from pprint import pprint
-
 from discord.ext import commands
 
 class CourseCommand(commands.Cog):
