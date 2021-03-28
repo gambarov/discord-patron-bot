@@ -1,10 +1,8 @@
-import requests
 import discord
 from discord.ext import commands
 
 import io, os
 import aiohttp
-import requests
 
 import random
 
@@ -15,36 +13,30 @@ class EroCommand(commands.Cog):
         self.bot = bot
 
     @commands.command(name = "ero", help = "some ero")
-    async def execute(self, context, *, tag='pussy'):
+    async def execute(self, ctx, *, tag='pussy'):
 
-        image_name = self.get_random_image_name(tag)
-
-        if not image_name:
-            return await context.send('Can\'t get image name')
-
-        url = self.get_image_url(image_name)
-
-        if not url:
-            return await context.send('Can\'t get image')
+        image_id = await self._get_random_image_id(tag)
+        url = await self._get_image_url(image_id)
 
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as response:
 
                 if response.status != 200:
-                    return await context.send('Could\'nt download file...')
+                    raise Exception('Could\'nt download file')
                 
                 data = io.BytesIO(await response.read())
-                await context.send(file=discord.File(data, '{}.png'.format(tag), spoiler=True))
+                await ctx.send(file=discord.File(data, '{}.png'.format(tag), spoiler=True))
 
-    def get_random_image_name(self, tag):
-        page = random.choice(range(1, self.get_max_page(tag)))
-        response = requests.get('https://erowall.com/teg/{}/page/{}'.format(tag, page))
+    @execute.error
+    async def info_error(self, ctx, error):
+        print(error)
+        return await ctx.send('Не получилось получить фото')
 
-        if response.status_code != 200:
-            return None
-        
-        names = []
-        soup = BeautifulSoup(markup=response.text, features="html.parser") 
+    async def _get_random_image_id(self, tag):
+        page = random.choice(range(1, await self._get_max_page(tag)))
+        response = await self._get_response_text('https://erowall.com/teg/{}/page/{}'.format(tag, page))
+        ids = []
+        soup = BeautifulSoup(markup=response, features="html.parser") 
         content = soup.find('div', { 'class':'content'} )
         wpminis = content.find_all('div', { 'class':'wpmini' } )
 
@@ -54,19 +46,15 @@ class EroCommand(commands.Cog):
                 img = a.find('img')
                 if img:
                     url = img.get('src')                
-                    name = url.rsplit('/', 1)[-1]       # split url and get last (name.jpg)
-                    name = os.path.splitext(name)[0]    # remove ext (.jpg)
-                    names.append(name)
+                    id = url.rsplit('/', 1)[-1]     # split url and get last (name.jpg)
+                    id = os.path.splitext(id)[0]    # remove ext (.jpg)
+                    ids.append(id)
 
-        return random.choice(names)
+        return random.choice(ids)
 
-    def get_image_url(self, name):
-        response = requests.get('https://erowall.com/w/{}/'.format(name))
-        
-        if response.status_code != 200:
-            return None
-
-        soup = BeautifulSoup(markup=response.text, features="html.parser") 
+    async def _get_image_url(self, id):
+        response = await self._get_response_text('https://erowall.com/w/{}/'.format(id))
+        soup = BeautifulSoup(markup=response, features="html.parser") 
         viewwallpaper = soup.find('div', { 'class':'viewwallpaper'} )
 
         if viewwallpaper:
@@ -78,14 +66,9 @@ class EroCommand(commands.Cog):
                     return 'https://erowall.com/' + url 
         return None
 
-    def get_max_page(self, tag):
-        response = requests.get('https://erowall.com/search/{}/'.format(tag))
-
-        if response.status_code != 200:
-            print('get_max_page: status_code' + str(response.status_code))
-            return 2
-
-        soup = BeautifulSoup(markup=response.text, features="html.parser") 
+    async def _get_max_page(self, tag):
+        markup = await self._get_response_text('https://erowall.com/search/{}/'.format(tag))
+        soup = BeautifulSoup(markup=markup, features="html.parser") 
         paginator = soup.find('div', { 'class':'paginator' })
         ul = paginator.find('ul')
         num = 1
@@ -96,6 +79,15 @@ class EroCommand(commands.Cog):
                 pass
         print(num)
         return num
+
+    async def _get_response_text(self, url):
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as response:
+                if response.status != 200:
+                    return ''
+                await session.close()
+                return await response.text()
+        return ''
 
 def setup(bot):
     bot.add_cog(EroCommand(bot))
