@@ -6,7 +6,7 @@ class CleanupCommand(commands.Cog):
 
     @commands.command(name = "уборка", help = "удаление сообщений, связанных с командами бота")
     async def execute(self, context, *, limit=10):
-        limit = max(limit, 50)
+        limit = min(limit, 50)
         channel = context.message.channel
 
         target_messages = []

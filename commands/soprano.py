@@ -1,5 +1,6 @@
 import random
 
+import discord
 from discord.ext import commands
 
 class SopranoCommand(commands.Cog):
@@ -16,21 +17,24 @@ class SopranoCommand(commands.Cog):
         random.shuffle(members)
         # Кол-во выстрелов: макс. 6, либо меньше, если меньше участников
         count = min(6, len(members))
-        message = 'Заряжаю и проворачиваю револьер...' + '\n'
+
+        embed = discord.Embed(colour = 0x42F56C)
 
         for i, member in enumerate(members):
             # Последний выстрел = 100%
             if i == 5:
-                message += member.name + ' застрелился' + '\n'
+                embed.add_field(name = member.name, value = 'застрелился', inline=False)
+                embed.colour = 0xE02B2B
                 break
             # Шанс выстрела
             if self.possibly():
-                message += member.name + ' застрелился' + '\n'
+                embed.add_field(name = member.name, value = 'застрелился', inline=False)
+                embed.colour = 0xE02B2B
                 break
             else:
-                message += member.name + ' выжил' + '\n'
-                
-        await context.send(message)
+                embed.add_field(name = member.name, value = 'выжил', inline=False)
+        
+        await context.send(embed = embed)
 
     def possibly(self):
         return random.randrange(1, 100) <= 17

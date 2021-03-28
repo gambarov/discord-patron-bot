@@ -22,14 +22,14 @@ class Account:
             amount = False
 
         if not amount:
-            return ':no_entry_sign: Укажите корректное кол-во $'
+            return ':warning: Укажите корректное кол-во $', 0xF59E42
 
         if self.dollars < amount:
-            return ':no_entry_sign: Недостаточно средств'
+            return ':no_entry_sign: Недостаточно средств', 0xE02B2B 
 
         bitcoins_to_get = amount / self._bitcoin_cost
         self._update(self.dollars - amount, self.bitcoins + bitcoins_to_get)
-        return ':gear: Вы успешно приобрели {} BTC за {} $'.format(bitcoins_to_get, amount)
+        return ':gear: Вы успешно приобрели {} BTC за {} $'.format(bitcoins_to_get, amount), 0x42F56C
 
     def sell(self, percent):
         try:
@@ -38,19 +38,18 @@ class Account:
             percent = False
 
         if not percent:
-            return ':no_entry_sign: Укажите корректный % продажи'
+            return ':warning: Укажите корректный % продажи', 0xF59E42
 
         if percent < 1 or percent > 100:
-            return ':no_entry_sign: Указан некорректный % продажи'
+            return ':no_entry_sign: Указан некорректный % продажи', 0xE02B2B
 
         bitcoins_to_sell = (self.bitcoins * percent) / 100
         dollars_to_get = bitcoins_to_sell * self._bitcoin_cost
-        dollars_to_get = round(dollars_to_get, 2)
 
         self._update(self.dollars + dollars_to_get, self.bitcoins - bitcoins_to_sell)
-        return ':gear: Вы успешно продали {} BTC за {} $'.format(bitcoins_to_sell, dollars_to_get)
+        return ':gear: Вы успешно продали {} BTC за {} $'.format(bitcoins_to_sell, round(dollars_to_get, 2)), 0x42F56C
 
     def _update(self, dollars, bitcoins):
-        self.dollars = dollars
+        self.dollars = round(dollars, 2)
         self.bitcoins = bitcoins
         db.update({ 'dollars':self.dollars, 'bitcoins':self.bitcoins }, Query().id == self.member.id)

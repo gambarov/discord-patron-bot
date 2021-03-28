@@ -1,3 +1,5 @@
+import discord
+
 from discord.ext import commands
 
 from commands.course import CourseCommand
@@ -15,17 +17,21 @@ class ExchangeCommand(commands.Cog):
         command = getattr(self, subcommand_name, 'help') 
         account = Account(ctx.message.author, CourseCommand.get_bitcoin_cost())
         # Вызов подкоманды
-        message = command(account, arg)
-        return await ctx.send(message)
+        message, colour = command(account, arg)
+        embed = discord.Embed(description = message, colour = colour)
+        return await ctx.send(embed = embed)
 
     @execute.error
     async def info_error(self, ctx, error):
-        return await ctx.send(self.help())
+        print(error)
+        message, colour = self.help()
+        embed = discord.Embed(description = message, colour = colour)
+        return await ctx.send(embed = embed)
 
     def account(self, instance, _=None):
         message = ':moneybag: Ваш счет: {} $'.format(str(instance.dollars)) + '\n'
         message += ':coin: BTC: {}'.format(str(instance.bitcoins))
-        return message
+        return message, 0x4299F5
 
     def buy(self, account, amount):
         return account.buy(amount)
@@ -34,7 +40,7 @@ class ExchangeCommand(commands.Cog):
         return account.sell(percent)
 
     def help(self, _=None, __=None):
-        return ':exclamation: Команды: \n!биржа аккаунт \n!биржа продать [%] \n!биржа купить [$]'
+        return ':exclamation: Команды: \n!биржа аккаунт \n!биржа продать [%] \n!биржа купить [$]', 0x4299F5
 
     def _get_subcommand_name(self, aliase):
         return {
