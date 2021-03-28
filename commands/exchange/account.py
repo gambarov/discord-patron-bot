@@ -12,14 +12,8 @@ class Account:
             db.insert({ 'id':member.id, 'dollars':1000, 'bitcoins':0 })
             user = next(iter(db.search(Query().id == member.id)), None)
         
-        self._dollars = user['dollars']
-        self._bitcoins = user['bitcoins']
-
-    def get_dollars(self):
-        return self._dollars
-
-    def get_bitcoins(self):
-        return self._bitcoins
+        self.dollars = user['dollars']
+        self.bitcoins = user['bitcoins']
 
     def buy(self, amount):
         try:
@@ -30,14 +24,12 @@ class Account:
         if not amount:
             return ':no_entry_sign: Укажите корректное кол-во $'
 
-        if self._dollars < amount:
+        if self.dollars < amount:
             return ':no_entry_sign: Недостаточно средств'
 
-        bitcoins = amount / self._bitcoin_cost
-        self._dollars = self._dollars - amount
-        self._bitcoins = self._bitcoins + bitcoins 
-        db.update({ 'dollars':self._dollars, 'bitcoins':self._bitcoins }, Query().id == self.member.id)
-        return ':gear: Вы успешно приобрели {} BTC за {} $'.format(bitcoins, amount)
+        bitcoins_to_get = amount / self._bitcoin_cost
+        self._update(self.dollars - amount, self.bitcoins + bitcoins_to_get)
+        return ':gear: Вы успешно приобрели {} BTC за {} $'.format(bitcoins_to_get, amount)
 
     def sell(self, percent):
         try:
@@ -51,16 +43,14 @@ class Account:
         if percent < 1 or percent > 100:
             return ':no_entry_sign: Указан некорректный % продажи'
 
-        bitcoins_to_sell = (self._bitcoins * percent) / 100
-        dollars_for_get = bitcoins_to_sell * self._bitcoin_cost
-        dollars_for_get = round(dollars_for_get, 2)
+        bitcoins_to_sell = (self.bitcoins * percent) / 100
+        dollars_to_get = bitcoins_to_sell * self._bitcoin_cost
+        dollars_to_get = round(dollars_to_get, 2)
 
-        self._dollars += dollars_for_get
-        self._bitcoins -= bitcoins_to_sell
-        db.update({ 'dollars':self._dollars, 'bitcoins':self._bitcoins }, Query().id == self.member.id)
-        return ':gear: Вы успешно продали {} BTC за {} $'.format(bitcoins_to_sell, dollars_for_get)
+        self._update(self.dollars + dollars_to_get, self.bitcoins - bitcoins_to_sell)
+        return ':gear: Вы успешно продали {} BTC за {} $'.format(bitcoins_to_sell, dollars_to_get)
 
-        
-
-
-        
+    def _update(self, dollars, bitcoins):
+        self.dollars = dollars
+        self.bitcoins = bitcoins
+        db.update({ 'dollars':self.dollars, 'bitcoins':self.bitcoins }, Query().id == self.member.id)

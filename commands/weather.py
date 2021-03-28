@@ -9,7 +9,10 @@ class WeatherCommand(commands.Cog):
         self.bot = bot
 
     @commands.command(name = "погода", help = "в представлении не нуждается")
-    async def execute(self, context, *, city):
+    async def execute(self, context, *, city=''):
+        if city == '':
+            return await context.send('Укажите город')
+
         response = requests.post('http://api.weatherapi.com/v1/current.json', data = { 'key':KEY, 'lang':'ru', 'q':city })
         print(response.text)
 
@@ -20,8 +23,8 @@ class WeatherCommand(commands.Cog):
         await context.send(self.get_message(json_data))
     
     def get_message(self, data):
-        if not 'location' in data:
-            return 'Ошибка№1, попробуйте еще раз позже' 
+        if (not 'location' in data) or (len(data['current']) == 0):
+            return 'Данные отсутствуют, попробуйте позже еще раз' 
 
         location = data['location']
         current = data['current']

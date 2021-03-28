@@ -1,6 +1,3 @@
-import requests
-import json
-
 from discord.ext import commands
 
 from commands.course import CourseCommand
@@ -26,8 +23,8 @@ class ExchangeCommand(commands.Cog):
         return await ctx.send(self.help())
 
     def account(self, instance, _=None):
-        message = ':moneybag: Ваш счет: {} $'.format(str(instance.get_dollars())) + '\n'
-        message += ':coin: BTC: {}'.format(str(instance.get_bitcoins()))
+        message = ':moneybag: Ваш счет: {} $'.format(str(instance.dollars)) + '\n'
+        message += ':coin: BTC: {}'.format(str(instance.bitcoins))
         return message
 
     def buy(self, account, amount):
@@ -37,7 +34,7 @@ class ExchangeCommand(commands.Cog):
         return account.sell(percent)
 
     def help(self, _=None, __=None):
-        return ':exclamation: Команды: \n!биржа аккаунт \n!биржа продать [процент] \n!биржа купить [сумма]'
+        return ':exclamation: Команды: \n!биржа аккаунт \n!биржа продать [%] \n!биржа купить [$]'
 
     def _get_subcommand_name(self, aliase):
         return {

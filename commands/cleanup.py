@@ -5,14 +5,15 @@ class CleanupCommand(commands.Cog):
         self.bot = bot
 
     @commands.command(name = "уборка", help = "удаление сообщений, связанных с командами бота")
-    async def execute(self, context, *count):
+    async def execute(self, context, *, limit=10):
+        limit = max(limit, 50)
         channel = context.message.channel
 
         target_messages = []
-        history_messages = await channel.history(limit=10).flatten()
+        history_messages = await channel.history(limit=limit).flatten()
 
         for message in history_messages:
-            # Сообщение, отправленное ботом
+            # Любое сообщение, отправленное ботом
             if message.author == self.bot.user:
                 target_messages.append(message)
                 continue
