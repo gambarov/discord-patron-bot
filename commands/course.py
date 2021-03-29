@@ -19,12 +19,13 @@ class CourseCommand(commands.Cog):
             for need in chars:
                 # Если попалась с нужным кодом
                 if code == need.upper():
+                    nominal = data['Nominal'] if int(data['Nominal']) > 1 else ''
                     name  = data['Name']
                     value = round(data['Value'], 2)
                     diff  = round(data['Value'] - data['Previous'], 2)
                     diff  = '+{}'.format(diff) if diff >= 0 else diff
                     embed.add_field(
-                        name = name,
+                        name = '{} {}'.format(nominal, name),
                         value = '{} ₽ ({})'.format(value, diff),
                         inline=True
                     )

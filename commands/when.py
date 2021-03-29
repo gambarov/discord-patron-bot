@@ -25,9 +25,9 @@ class WhenCommand(commands.Cog):
         date = start_date + datetime.timedelta(days=random_number_of_days)
         return '{} {}'.format(phrase or random.choice(texts), date)
 
-    def generate2(self, phrase = ''):
+    def generate2(self, _ = None):
         texts = [ 'Завтра', 'На следующей неделе', 'Через месяц', 'Через год', 'Никогда' ]
-        return '{} {}'.format(random.choice(texts), phrase)
+        return random.choice(texts)
 
     def generate3(self, phrase = ''):
         times = [ 'часов', 'дней', 'месяцев', 'лет' ]

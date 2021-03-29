@@ -14,5 +14,5 @@ class Patron:
 
     def _load_extensions(self, system):
         for file in files.get_py_files(system):
-            self.bot.load_extension('{}.{}'.format(system, file))
+            self.bot.load_extension('{}.{}'.format(system.replace('/', '.'), file))
         

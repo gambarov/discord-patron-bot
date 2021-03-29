@@ -14,7 +14,6 @@ class EroCommand(commands.Cog):
 
     @commands.command(name = "ero", help = "some ero")
     async def execute(self, ctx, *, tag='pussy'):
-
         image_id = await self._parse_random_image_id(tag)
         url = await self._parse_image_url(image_id)
 
@@ -31,7 +30,7 @@ class EroCommand(commands.Cog):
         if isinstance(error, commands.CommandInvokeError):
             if isinstance(error.original, AttributeError):
                 return await ctx.send("Такого раздела не существует")
-        print(type(error), error)
+        print(error)
         await ctx.send("Не удалось получить фото")
 
     async def _parse_random_image_id(self, tag):

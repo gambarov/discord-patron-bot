@@ -1,54 +1,51 @@
-import discord
+import sys, discord 
 
 from discord.ext import commands
-
-from commands.course import CourseCommand
-from commands.exchange.account import Account
+from commands.exchange.economy import Economy, EconomyException
 
 class ExchangeCommand(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         
-    @commands.command(name = "биржа", help = "торговля в бирже")
-    async def execute(self, ctx, subcommand, *, arg=None):
-        # Получаем название подкоманды
-        subcommand_name = self._get_subcommand_name(subcommand)
-        # Пытаемся получить подкоманду
-        command = getattr(self, subcommand_name, 'help') 
-        account = Account(ctx.message.author, CourseCommand.get_bitcoin_cost())
-        # Вызов подкоманды
-        message, colour = command(account, arg)
-        embed = discord.Embed(description = message, colour = colour)
-        return await ctx.send(embed = embed)
+    @commands.group(name = "биржа", help = "торговля на бирже")
+    async def execute(self, ctx):
+        if ctx.invoked_subcommand is None:
+            await self.help(ctx)
 
-    @execute.error
-    async def info_error(self, ctx, error):
+    @commands.Cog.listener()
+    async def on_command_error(self, ctx, error):
+        if isinstance(error, commands.MissingRequiredArgument):
+            return await ctx.send(embed = discord.Embed(description = ":warning: Введите аргумент", colour = 0xF59E42))
         print(error)
-        message, colour = self.help()
-        embed = discord.Embed(description = message, colour = colour)
-        return await ctx.send(embed = embed)
+        await ctx.send(embed = discord.Embed(description = "Неизвестная ошибка", colour = 0xE02B2B))
 
-    def account(self, instance, _=None):
-        message = ':moneybag: Ваш счет: {} $'.format(str(instance.dollars)) + '\n'
-        message += ':coin: BTC: {}'.format(str(instance.bitcoins))
-        return message, 0x4299F5
+    @execute.command(name = "аккаунт")
+    async def account(self, ctx):
+        instance = Economy.get(ctx.author)
+        message = ':moneybag: Ваш счет: {} $'.format(str(instance['dollars'])) + '\n'
+        message += ':coin: BTC: {}'.format(str(instance['bitcoins']))
+        await ctx.send(embed = discord.Embed(description = message, colour = 0x4299F5))
 
-    def buy(self, account, amount):
-        return account.buy(amount)
+    @execute.command(name = "купить")
+    async def buy(self, ctx, amount):
+        try:
+            bitcoins = await Economy.buy(ctx.author, amount)
+            await ctx.send(embed = discord.Embed(description = "Вы успешно приобрели {} BTC за {} $".format(bitcoins, amount), colour = 0x42F56C))
+        except EconomyException as e:
+            await ctx.send(embed = discord.Embed(description = e.message, colour = e.colour))
 
-    def sell(self, account, percent):
-        return account.sell(percent)
+    @execute.command(name = "продать")
+    async def sell(self, ctx, percent):
+        try:
+            bitcoins = await Economy.sell(ctx.author, percent)
+            await ctx.send(embed = discord.Embed(description = "Вы успешно продали {} BTC".format(bitcoins), colour = 0x42F56C))
+        except EconomyException as e:
+            await ctx.send(embed = discord.Embed(description = e.message, colour = e.colour))
 
-    def help(self, _=None, __=None):
-        return ':exclamation: Команды: \n!биржа аккаунт \n!биржа продать [%] \n!биржа купить [$]', 0x4299F5
-
-    def _get_subcommand_name(self, aliase):
-        return {
-        'купить':'buy',
-        'продать':'sell',
-        'аккаунт':'account',
-        'помощь':'help'
-        }.get(aliase, 'help')
+    @execute.command(name = "помощь")
+    async def help(self, ctx):
+        message = ":exclamation: Команды: \n!биржа аккаунт \n!биржа продать [%] \n!биржа купить [$]"
+        await ctx.send(embed = discord.Embed(description = message, colour = 0x4299F5))
 
 def setup(bot):
     bot.add_cog(ExchangeCommand(bot))

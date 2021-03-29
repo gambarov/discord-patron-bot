@@ -23,8 +23,7 @@ class WeatherCommand(commands.Cog):
     async def info_error(self, context, error):
         if isinstance(error, commands.MissingRequiredArgument):
             return await context.send("Укажите город")
-
-        print('{}: {}'.format(type(error), error))
+        print(error)
         await context.send("Не удалось получить погоду")
 
     def parse(self, data):
