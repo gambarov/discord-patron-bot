@@ -1,8 +1,5 @@
-import discord
 from discord.ext.commands import Bot
-
 from utils import files
-
 from bot.config import options
 
 class Patron:

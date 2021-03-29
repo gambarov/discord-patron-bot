@@ -1,5 +1,4 @@
-from discord import colour
-import requests
+import aiohttp
 import json
 
 import discord
@@ -12,19 +11,13 @@ class CourseCommand(commands.Cog):
         
     @commands.command(name = "курс", help = "текущий курс валют")
     async def execute(self, context, *, chars=None):
-        # Получаем данные
-        response = requests.get('https://www.cbr-xml-daily.ru/daily_json.js')
-        json_data = json.loads(response.text)
-
-        message = 'Курс валют:' + '\n'
-
         chars = self.default_chars if chars == None else chars.split()
         embed = discord.Embed(colour = 0x4299F5)
 
         # Перебираем все валюты
-        for code, data in json_data['Valute'].items():
-            # Если попалась с нужным кодом
+        for code, data in await self.get_courses():
             for need in chars:
+                # Если попалась с нужным кодом
                 if code == need.upper():
                     name  = data['Name']
                     value = round(data['Value'], 2)
@@ -36,21 +29,27 @@ class CourseCommand(commands.Cog):
                         inline=True
                     )
 
-        # Курс биткоина
-        bitcoin_cost = self.get_bitcoin_cost()
-
         embed.add_field(
             name='Биткоин',
-            value='{} $'.format(bitcoin_cost),
+            value='{} $'.format(await self.get_bitcoin_cost()),
             inline=True
         )
 
         await context.send(embed = embed)
 
     @staticmethod
-    def get_bitcoin_cost(valute='USD'):
-        response = requests.get('https://blockchain.info/ticker')
-        return json.loads(response.text)[valute]['buy']
+    async def get_courses():
+        async with aiohttp.ClientSession() as session:
+            async with session.get("https://www.cbr-xml-daily.ru/daily_json.js") as response:
+                if response.status == 200:
+                    return json.loads(await response.text())['Valute'].items()
+
+    @staticmethod
+    async def get_bitcoin_cost(valute='USD'):
+        async with aiohttp.ClientSession() as session:
+            async with session.get("https://blockchain.info/ticker") as response:
+                if response.status == 200:
+                    return json.loads(await response.text())[valute]['buy']
 
 def setup(bot):
     bot.add_cog(CourseCommand(bot))

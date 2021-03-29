@@ -8,21 +8,20 @@ class CleanupCommand(commands.Cog):
     async def execute(self, context, *, limit=10):
         limit = min(limit, 50)
         channel = context.message.channel
+        await channel.delete_messages(await self.get_trash_messages(channel, limit))
 
-        target_messages = []
-        history_messages = await channel.history(limit=limit).flatten()
-
-        for message in history_messages:
+    async def get_trash_messages(self, channel, limit):
+        messages = []
+        async for message in channel.history(limit=limit):
             # Любое сообщение, отправленное ботом
             if message.author == self.bot.user:
-                target_messages.append(message)
+                messages.append(message)
                 continue
             # Если сообщение начинается с вызова какой-либо команды
             for command in self.bot.commands:
                 if message.content.startswith('{}{}'.format(self.bot.command_prefix, command.name)):
-                    target_messages.append(message)
-
-        await channel.delete_messages(target_messages)
+                    messages.append(message)
+        return messages
 
 def setup(bot):
     bot.add_cog(CleanupCommand(bot))
