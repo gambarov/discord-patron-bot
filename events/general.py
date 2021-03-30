@@ -13,9 +13,5 @@ class GeneralEvents(commands.Cog):
         if message.author == self.bot.user:
             return
 
-        if random.randrange(1, 100) < 5:
-            emoji = random.choice(emojis)
-            await message.add_reaction(emoji)
-
 def setup(bot):
     bot.add_cog(GeneralEvents(bot))

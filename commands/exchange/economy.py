@@ -3,6 +3,7 @@ db = TinyDB('commands/exchange/db.json')
 
 import discord
 from commands.course import CourseCommand
+from utils.helper import get_discord_color
 
 class EconomyException(Exception):
     def __init__(self, message, colour):
@@ -17,12 +18,12 @@ class Economy():
             amount = int(amount)
             if amount < 1: raise Exception()            
         except:
-            raise EconomyException(":no_entry_sign: Укажите корректное кол-во $", 0xE02B2B)
+            raise EconomyException(":no_entry_sign: Укажите корректное кол-во $", get_discord_color('error'))
 
         account = Economy.get(member)
 
         if account['dollars'] < amount:
-            raise EconomyException(":no_entry_sign: Недостаточно средств", 0xE02B2B)
+            raise EconomyException(":no_entry_sign: Недостаточно средств", get_discord_color('error'))
 
         bitcoins_to_get = amount / await CourseCommand.get_bitcoin_cost()
         Economy.update(member, account['dollars'] - amount, account['bitcoins'] + bitcoins_to_get)
@@ -34,12 +35,12 @@ class Economy():
             percent = int(percent)
             if percent < 1 or percent > 100: raise Exception()
         except:
-            raise EconomyException(":no_entry_sign: Укажите корректный % продажи", 0xE02B2B)
+            raise EconomyException(":no_entry_sign: Укажите корректный % продажи", get_discord_color('error'))
 
         account = Economy.get(member)
 
         if account['bitcoins'] == 0:
-            raise EconomyException(":warning: На счету отсутствуют BTC", 0xF59E42)
+            raise EconomyException(":warning: На счету отсутствуют BTC", get_discord_color('warning'))
 
         bitcoins_to_sell = (account['bitcoins'] * percent) / 100
         dollars_to_get = bitcoins_to_sell * (await CourseCommand.get_bitcoin_cost())
@@ -56,7 +57,7 @@ class Economy():
 
     @staticmethod
     def get(member):
-        assert(isinstance(member, discord.Member) or isinstance(member, discord.User))
+        assert(isinstance(member, discord.abc.User))
         user = next(iter(db.search(Query().id == member.id)), None)
         # Новый пользователь
         if not user:

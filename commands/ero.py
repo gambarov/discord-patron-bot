@@ -8,11 +8,15 @@ import random
 
 from bs4 import BeautifulSoup
 
+from utils.checks import is_cartel
+from utils.helper import get_discord_color
+
 class EroCommand(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
     @commands.command(name = "ero", help = "some ero")
+    @commands.check_any(commands.is_owner(), is_cartel())
     async def execute(self, ctx, *, tag='pussy'):
         image_id = await self._parse_random_image_id(tag)
         url = await self._parse_image_url(image_id)
@@ -26,11 +30,13 @@ class EroCommand(commands.Cog):
                 await ctx.send(file = discord.File(data, '{}.png'.format(tag), spoiler = True))
 
     @execute.error
-    async def info_error(self, ctx, error):
+    async def on_error(self, ctx, error):
         if isinstance(error, commands.CommandInvokeError):
             if isinstance(error.original, AttributeError):
-                return await ctx.send("Такого раздела не существует")
-        print(error)
+                return await ctx.send(embed = discord.Embed(description = "Такого раздела не существует", colour = get_discord_color('error')))
+        if isinstance(error, commands.CheckFailure):
+            return await ctx.send(embed = discord.Embed(description = "Команда доступна только для членов сервера Manada Gaming", colour = get_discord_color('error')))
+        print(type(error), error)
         await ctx.send("Не удалось получить фото")
 
     async def _parse_random_image_id(self, tag):
