@@ -11,19 +11,19 @@ class InfoCommand(commands.Cog):
         if ctx.invoked_subcommand is None:
             await self.me(ctx)
 
+
     @execute.command(name = "юзер", help = "информация о пользователе")
     async def me(self, ctx, name = ''):
         if name != '':
-            if ctx.guild is not None:
-                name = re.sub('[<@!>]', '', name)
-                try:
-                    user = ctx.guild.get_member(int(name))
-                except:
-                    user = ctx.guild.get_member_named(name)
-                if user is None:
-                    return await ctx.send(embed = discord.Embed(description = "Пользователь '{}' не найден".format(name), colour = get_discord_color('error')))
-            else:
+            if ctx.guild is None:
                 return await ctx.send(embed = discord.Embed(description = "Пользователь должен быть на одном сервере с Вами", colour = get_discord_color('error')))
+            name = re.sub('[<@!>]', '', name)
+            try:
+                user = ctx.guild.get_member(int(name))
+            except:
+                user = ctx.guild.get_member_named(name)
+            if user is None:
+                return await ctx.send(embed = discord.Embed(description = "Пользователь '{}' не найден".format(name), colour = get_discord_color('error')))
         else:
             user = ctx.author
 
@@ -38,21 +38,6 @@ class InfoCommand(commands.Cog):
         embed = self.add_member_info(user, embed)
 
         await ctx.send(embed = embed)
-
-    
-    @execute.command(name = "сервер", help = "информация о сервере")
-    async def guild(self, ctx):
-        guild = ctx.guild
-        if ctx.guild is None:
-            return await ctx.send(discord.Embed(description = "Вы должны находиться на сервере", colour = get_discord_color('error')))
-        embed = discord.Embed(description = guild.description, colour = get_discord_color('info'))
-        embed.set_author(name = guild.name)
-        embed.add_field(name = "Owner:", value = "<@!{}>".format(guild.owner.id))
-        embed.add_field(name = "Members:", value = int(guild.member_count))
-        embed.set_thumbnail(url = guild.icon_url)
-        embed.set_footer(text = "ID: {}".format(guild.id))
-        return await ctx.send(embed = embed)
-
 
     def add_member_info(self, member, embed):
         if not isinstance(member, discord.Member):
@@ -71,6 +56,20 @@ class InfoCommand(commands.Cog):
                     field_value += ', '
             embed.add_field(name = "Roles ({}):".format(len(member.roles) - 1), value = field_value, inline = False)
         return embed
+    
+
+    @execute.command(name = "сервер", help = "информация о сервере")
+    async def guild(self, ctx):
+        guild = ctx.guild
+        if ctx.guild is None:
+            return await ctx.send(discord.Embed(description = "Вы должны находиться на сервере", colour = get_discord_color('error')))
+        embed = discord.Embed(description = guild.description, colour = get_discord_color('info'))
+        embed.set_author(name = guild.name)
+        embed.add_field(name = "Owner:", value = "<@!{}>".format(guild.owner.id))
+        embed.add_field(name = "Members:", value = int(guild.member_count))
+        embed.set_thumbnail(url = guild.icon_url)
+        embed.set_footer(text = "ID: {}".format(guild.id))
+        return await ctx.send(embed = embed)
 
 def setup(bot):
     bot.add_cog(InfoCommand(bot))
