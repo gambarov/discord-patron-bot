@@ -13,9 +13,9 @@ class CourseCommand(commands.Cog):
     async def execute(self, context, *, chars=None):
         chars = self.default_chars if chars == None else chars.split()
         embed = discord.Embed(colour = 0x4299F5)
-
+        courses = await self.get_courses()
         # Перебираем все валюты
-        for code, data in await self.get_courses():
+        for code, data in courses.items():
             for need in chars:
                 # Если попалась с нужным кодом
                 if code == need.upper():
@@ -43,7 +43,7 @@ class CourseCommand(commands.Cog):
         async with aiohttp.ClientSession() as session:
             async with session.get("https://www.cbr-xml-daily.ru/daily_json.js") as response:
                 if response.status == 200:
-                    return json.loads(await response.text())['Valute'].items()
+                    return json.loads(await response.text())['Valute']
 
     @staticmethod
     async def get_bitcoin_cost(valute='USD'):
