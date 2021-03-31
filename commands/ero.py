@@ -1,4 +1,4 @@
-import discord
+import discord, logging
 from discord.ext import commands
 
 import io, os
@@ -10,6 +10,8 @@ from bs4 import BeautifulSoup
 
 from utils.checks import is_cartel
 from utils.helper import get_discord_color
+
+logger = logging.getLogger('discord')
 
 class EroCommand(commands.Cog):
     def __init__(self, bot):
@@ -36,7 +38,7 @@ class EroCommand(commands.Cog):
                 return await ctx.send(embed = discord.Embed(description = "Такого раздела не существует", colour = get_discord_color('error')))
         if isinstance(error, commands.CheckFailure):
             return await ctx.send(embed = discord.Embed(description = "Команда доступна только для членов сервера Manada Gaming", colour = get_discord_color('error')))
-        print(type(error), error)
+        logger.exception(error)
         await ctx.send("Не удалось получить фото")
 
     async def _parse_random_image_id(self, tag):

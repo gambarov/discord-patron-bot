@@ -1,0 +1,36 @@
+[31.03.21 23:32:16] [C:\g-dev\python\discord-patron-bot\commands\info.py:58] discord ERROR: Command raised an exception: Exception: faggot
+Traceback (most recent call last):
+  File "C:\Users\Denis\AppData\Local\Programs\Python\Python39\lib\site-packages\discord\ext\commands\core.py", line 85, in wrapped
+    ret = await coro(*args, **kwargs)
+  File "C:\g-dev\python\discord-patron-bot\commands\info.py", line 13, in execute
+    raise Exception("faggot")
+Exception: faggot
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Denis\AppData\Local\Programs\Python\Python39\lib\site-packages\discord\ext\commands\bot.py", line 902, in invoke
+    await ctx.command.invoke(ctx)
+  File "C:\Users\Denis\AppData\Local\Programs\Python\Python39\lib\site-packages\discord\ext\commands\core.py", line 1336, in invoke
+    await injected(*ctx.args, **ctx.kwargs)
+  File "C:\Users\Denis\AppData\Local\Programs\Python\Python39\lib\site-packages\discord\ext\commands\core.py", line 94, in wrapped
+    raise CommandInvokeError(exc) from exc
+discord.ext.commands.errors.CommandInvokeError: Command raised an exception: Exception: faggot
+[31.03.21 23:32:16] [C:\g-dev\python\discord-patron-bot\commands\info.py:58] discord ERROR: Command raised an exception: Exception: faggot
+Traceback (most recent call last):
+  File "C:\Users\Denis\AppData\Local\Programs\Python\Python39\lib\site-packages\discord\ext\commands\core.py", line 85, in wrapped
+    ret = await coro(*args, **kwargs)
+  File "C:\g-dev\python\discord-patron-bot\commands\info.py", line 13, in execute
+    raise Exception("faggot")
+Exception: faggot
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Denis\AppData\Local\Programs\Python\Python39\lib\site-packages\discord\ext\commands\bot.py", line 902, in invoke
+    await ctx.command.invoke(ctx)
+  File "C:\Users\Denis\AppData\Local\Programs\Python\Python39\lib\site-packages\discord\ext\commands\core.py", line 1336, in invoke
+    await injected(*ctx.args, **ctx.kwargs)
+  File "C:\Users\Denis\AppData\Local\Programs\Python\Python39\lib\site-packages\discord\ext\commands\core.py", line 94, in wrapped
+    raise CommandInvokeError(exc) from exc
+discord.ext.commands.errors.CommandInvokeError: Command raised an exception: Exception: faggot

@@ -1,7 +1,9 @@
-import discord
+import discord, logging
 from discord.ext import commands
 from utils.helper import get_discord_color
 from commands.course import CourseCommand
+
+logger = logging.getLogger('discord')
 
 class ConvertCommand(commands.Cog):
     def __init__(self, bot):
@@ -9,7 +11,6 @@ class ConvertCommand(commands.Cog):
 
     @commands.command(name = "con", help = "конвертирование валют")
     async def execute(self, ctx, amount: int, from_valute: str, to_valute:str):
-        # Получаем всех участников канала
         courses = await CourseCommand.get_courses()
         courses['RUB'] = { 'CharCode':'RUB', 'Value':1, 'Nominal':1 }
         courses['BTC'] = { 'CharCode':'BTC', 'Value':await CourseCommand.get_bitcoin_cost('RUB'), 'Nominal':1 }
@@ -27,7 +28,9 @@ class ConvertCommand(commands.Cog):
 
         result = (amount * (int(from_course['Value']) / int(from_course['Nominal']))) / int((to_course['Value']) / int(to_course['Nominal']))
         result = round(result, 2)
-        await ctx.send(embed = discord.Embed(description = "{} {}".format(result, to_valute), colour = get_discord_color('info')))
+        embed = discord.Embed(description = "{} {}".format(result, to_valute), colour = get_discord_color('success'))
+        embed.set_author(name = "Результат:")
+        await ctx.send(embed = embed)
 
     @execute.error
     async def on_error(self, ctx, error):
@@ -38,7 +41,7 @@ class ConvertCommand(commands.Cog):
             return await ctx.send(embed = embed)
         if isinstance(error, commands.BadArgument):
             return await ctx.send(embed = discord.Embed(description = "Некорректный ввод", colour = get_discord_color('error')))
-        print(type(error), error)
+        logger.exception(error)
         await ctx.send("Неизвестная ошибка")
 
 def setup(bot):

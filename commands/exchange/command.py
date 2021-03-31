@@ -1,8 +1,10 @@
-import discord 
+import discord, logging
 
 from discord.ext import commands
 from commands.exchange.economy import Economy, EconomyException
 from utils.helper import get_discord_color
+
+logger = logging.getLogger('discord')
 
 class ExchangeCommand(commands.Cog):
     def __init__(self, bot):
@@ -13,14 +15,12 @@ class ExchangeCommand(commands.Cog):
         if ctx.invoked_subcommand is None:
             await self.help(ctx)
 
-
     @execute.command(name = "аккаунт")
     async def account(self, ctx):
         instance = Economy.get(ctx.author)
         message = ':moneybag: Ваш счет: {} $'.format(str(instance['dollars'])) + '\n'
         message += ':coin: BTC: {}'.format(str(instance['bitcoins']))
         await ctx.send(embed = discord.Embed(description = message, colour = 0x4299F5))
-
 
     @execute.command(name = "купить")
     async def buy(self, ctx, amount):
@@ -30,14 +30,6 @@ class ExchangeCommand(commands.Cog):
         except EconomyException as e:
             await ctx.send(embed = discord.Embed(description = e.message, colour = e.colour))
 
-    @buy.error
-    async def buy_on_error(self, ctx, error):
-        if isinstance(error, commands.MissingRequiredArgument):
-            return await ctx.send(embed = discord.Embed(description = ":warning: Укажите кол-во $", colour = get_discord_color('warning')))
-        print("ExchangeCommand.buy(): " + error)
-        await ctx.send(embed = discord.Embed(description = "Неизвестная ошибка", colour = get_discord_color('error')))
-
-
     @execute.command(name = "продать")
     async def sell(self, ctx, percent):
         try:
@@ -45,19 +37,17 @@ class ExchangeCommand(commands.Cog):
             await ctx.send(embed = discord.Embed(description = "Вы успешно продали {} BTC".format(bitcoins), colour = get_discord_color('success')))
         except EconomyException as e:
             await ctx.send(embed = discord.Embed(description = e.message, colour = e.colour))
-
-    @sell.error
-    async def sell_on_error(self, ctx, error):
-        if isinstance(error, commands.MissingRequiredArgument):
-            return await ctx.send(embed = discord.Embed(description = ":warning: Укажите %", colour = get_discord_color('warning')))
-        print("ExchangeCommand.sell(): " + error)
-        await ctx.send(embed = discord.Embed(description = "Неизвестная ошибка", colour = get_discord_color('error')))
-
-
+    
     @execute.command(name = "помощь")
     async def help(self, ctx):
         message = ":exclamation: Команды: \n!биржа аккаунт \n!биржа продать [%] \n!биржа купить [$]"
         await ctx.send(embed = discord.Embed(description = message, colour = get_discord_color('info')))
+
+    async def cog_command_error(self, ctx, error):
+        if isinstance(error, commands.MissingRequiredArgument):
+            return await ctx.send(embed = discord.Embed(description = ":warning: Укажите аргумент", colour = get_discord_color('warning')))
+        logger.exception(error)
+        await ctx.send(embed = discord.Embed(description = "Неизвестная ошибка", colour = get_discord_color('error')))
 
 def setup(bot):
     bot.add_cog(ExchangeCommand(bot))
