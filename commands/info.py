@@ -10,7 +10,6 @@ class InfoCommand(commands.Cog):
 
     @commands.group(name = "инфа", help = "информация по тому или иному объекту")
     async def execute(self, ctx):
-        raise Exception("faggot")
         if ctx.invoked_subcommand is None:
             await self.me(ctx)
 

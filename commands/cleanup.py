@@ -1,4 +1,7 @@
 from discord.ext import commands
+import logging
+
+logger = logging.getLogger('discord')
 
 class CleanupCommand(commands.Cog):
     def __init__(self, bot):
@@ -9,6 +12,10 @@ class CleanupCommand(commands.Cog):
         limit = min(limit, 50)
         channel = context.message.channel
         await channel.delete_messages(await self.get_trash_messages(channel, limit))
+
+    async def cog_command_error(self, ctx, error):
+        logger.exception(error)
+        await ctx.send("Не удалось провести уборку")
 
     async def get_trash_messages(self, channel, limit):
         messages = []
