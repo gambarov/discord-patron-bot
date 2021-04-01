@@ -25,8 +25,6 @@ class Session():
         # Если игрок с данным типом уже зарегистрирован
         if isinstance(self.players[player_type], discord.abc.User):
             raise PlayerAlreadyExistsException
-        user.player_type = player_type
-        user.move_emoji = emoji_moves.get(player_type)
         self.players[player_type] = user
 
     def move_current_player(self, default: discord.abc.User = None):
