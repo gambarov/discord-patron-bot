@@ -1,5 +1,5 @@
 from tinydb import TinyDB, Query
-db = TinyDB('commands/exchange/db.json')
+db = TinyDB('commands/market/db.json')
 
 import discord
 from commands.course import CourseCommand

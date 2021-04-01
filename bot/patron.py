@@ -10,7 +10,8 @@ class Patron(Bot):
         super().__init__(**options)
         self._load_extensions('commands')
         self._load_extensions('events')
-        self.load_extension('commands.exchange.command')
+        self.load_extension('commands.market.command')
+        self.load_extension('commands.tictactoe.command')
 
     def _load_extensions(self, system):
         for file in files.get_py_files(system):

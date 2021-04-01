@@ -1,7 +1,7 @@
 import discord, logging
 
 from discord.ext import commands
-from commands.exchange.economy import Economy, EconomyException
+from commands.market.economy import Economy, EconomyException
 from utils.helper import get_discord_color
 
 logger = logging.getLogger('discord')
