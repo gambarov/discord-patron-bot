@@ -8,7 +8,7 @@ class CleanupCommand(commands.Cog):
         self.bot = bot
 
     @commands.command(name = "уборка", help = "удаление сообщений, связанных с командами бота")
-    async def execute(self, context, *, limit=10):
+    async def execute(self, context, limit=10):
         limit = min(limit, 50)
         channel = context.message.channel
         await channel.delete_messages(await self.get_trash_messages(channel, limit))

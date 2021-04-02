@@ -1,7 +1,5 @@
 import discord, logging
 
-from discord import player
-
 class UndefinedPlayerTypeException(Exception):
     pass
 
@@ -9,8 +7,6 @@ class PlayerAlreadyExistsException(Exception):
     pass
 
 logger = logging.getLogger('discord')
-
-emoji_moves = { 'first':'❌', 'second':'⭕' }
 
 class Session():
     def __init__(self, id, grid) -> None:

@@ -1,6 +1,6 @@
 from discord.ext import commands
 import discord, logging
-from utils.helper import get_discord_color
+from utils.helper import get_discord_color, clamp
 
 from commands.tictactoe.manager import GameManager
 from commands.tictactoe.grid import GameGrid
@@ -43,6 +43,7 @@ class TicTacToe(commands.Cog):
         # Текущий юзер - не текущий игрок
         if not player:
             return
+        await message.clear_reaction(reaction.emoji)
         # Получаем тип и эмоджи хода
         player_type = session.get_player_type(player)
         player_emoji = self.manager.get_player_emoji_move(player_type)
@@ -52,11 +53,11 @@ class TicTacToe(commands.Cog):
         embed.set_author(name = "Крестики-нолики")
         first_player = session.get_player('first')
         second_player = session.get_player('second')
-        embed.add_field(name = "Игрок №1", value = "Ожидается" if first_player == None else "{}#{}".format(first_player.name, first_player.discriminator))
-        embed.add_field(name = "Игрок №2", value = "Ожидается" if second_player == None else "{}#{}".format(second_player.name, second_player.discriminator))
+        embed.add_field(name = "Игрок №1", value = "Ожидается" if first_player == None else "<@!{}>".format(first_player.id))
+        embed.add_field(name = "Игрок №2", value = "Ожидается" if second_player == None else "<@!{}>".format(second_player.id))
         player_winner = self.manager.check_for_winner(session)
         if player_winner:
-            embed.add_field(name = "Победитель:", value = "{}#{}".format(player_winner.name, player_winner.discriminator), inline = False)
+            embed.add_field(name = "Победитель:", value = "<@!{}>".format(player_winner.id), inline = False)
             embed.colour = get_discord_color('success')
         elif self.manager.check_for_draw(session):
             embed.add_field(name = "Игра завершена", value = "Ничья!", inline = False)
@@ -65,8 +66,7 @@ class TicTacToe(commands.Cog):
             player_next = first_player if (second_player == player) else second_player
             if player_next:
                 move_emoji = self.manager.get_player_emoji_move(session.get_player_type(player_next))
-                embed.add_field(name = "Текущий ход", value = "{}#{} ({})".format(player_next.name, player_next.discriminator, move_emoji), inline = False)
-        await message.clear_reaction(reaction.emoji)
+                embed.add_field(name = "Текущий ход", value = "{} ({})".format("<@!{}>".format(player_next.id), move_emoji), inline = False)
         await message.edit(embed = embed)
 
     @commands.Cog.listener()
@@ -74,10 +74,12 @@ class TicTacToe(commands.Cog):
         session = self.manager.sessions.get(message.id, None)
         if session:
            self.manager.delete_session(message.id)
-
+           
     async def cog_command_error(self, ctx, error):
+        if isinstance(error, commands.BadArgument):
+            return await ctx.send(embed = discord.Embed(description = "Размер поля должен быть целым числом", colour = get_discord_color('error')))
         logger.exception(error)
-        await ctx.send("Неизвестная ошибка!")
+        await ctx.send(embed = discord.Embed(description = "Неизвестная ошибка!", colour = get_discord_color('error')))
 
 def setup(bot):
     bot.add_cog(TicTacToe(bot))

@@ -1,9 +1,11 @@
 from tinydb import TinyDB, Query
 db = TinyDB('commands/market/db.json')
 
-import discord
+import discord, logging
 from commands.course import CourseCommand
 from utils.helper import get_discord_color
+
+logger = logging.getLogger('discord')
 
 class EconomyException(Exception):
     def __init__(self, message, colour):
@@ -61,6 +63,14 @@ class Economy():
         user = next(iter(db.search(Query().id == member.id)), None)
         # Новый пользователь
         if not user:
-            user = { 'id':member.id, 'dollars':1000, 'bitcoins':0 }
+            user = Economy.add(member)
             db.insert(user)
+        return user
+
+    @staticmethod
+    def add(member):
+        assert(isinstance(member, discord.abc.User))
+        user = { 'id':member.id, 'dollars':1000, 'bitcoins':0 }
+        db.insert(user)
+        logger.info("New market member: {}".format(str(member)))
         return user
