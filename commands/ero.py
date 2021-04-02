@@ -20,16 +20,17 @@ class EroCommand(commands.Cog):
     @commands.command(name = "ero", help = "some ero")
     @commands.check_any(commands.is_owner(), is_cartel())
     async def execute(self, ctx, *, tag='pussy'):
-        image_id = await self._parse_random_image_id(tag)
-        url = await self._parse_image_url(image_id)
+        async with ctx.typing():
+            image_id = await self._parse_random_image_id(tag)
+            url = await self._parse_image_url(image_id)
 
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url) as response:
-                if response.status != 200:
-                    raise Exception('Could\'nt download file')
-                
-                data = io.BytesIO(await response.read())
-                await ctx.send(file = discord.File(data, '{}.png'.format(tag), spoiler = True))
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url) as response:
+                    if response.status != 200:
+                        raise Exception('Could\'nt download file')
+                    
+                    data = io.BytesIO(await response.read())
+                    await ctx.send(file = discord.File(data, '{}.png'.format(tag), spoiler = True))
 
     @execute.error
     async def on_error(self, ctx, error):
