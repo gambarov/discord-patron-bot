@@ -1,4 +1,4 @@
-import discord, logging
+import logging
 from commands.tictactoe.session import Session
 
 logger = logging.getLogger('discord')

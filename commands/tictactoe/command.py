@@ -1,6 +1,6 @@
 from discord.ext import commands
 import discord, logging
-from utils.helper import get_discord_color, clamp
+from utils.helper import get_discord_color
 
 from commands.tictactoe.manager import GameManager
 from commands.tictactoe.grid import GameGrid
