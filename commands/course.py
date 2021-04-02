@@ -7,7 +7,7 @@ from discord.ext import commands
 class CourseCommand(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.default_chars = [ 'EUR', 'USD' ]
+        self.default_chars = [ 'EUR', 'USD', 'BTC' ]
         
     @commands.command(name = "курс", help = "текущий курс валют")
     async def execute(self, context, *, chars=None):
@@ -27,14 +27,11 @@ class CourseCommand(commands.Cog):
                     embed.add_field(
                         name = '{} {}'.format(nominal, name),
                         value = '{} ₽ ({})'.format(value, diff),
-                        inline=True
+                        inline = True
                     )
 
-        embed.add_field(
-            name='Биткоин',
-            value='{} $'.format(await self.get_bitcoin_cost()),
-            inline=True
-        )
+        if 'BTC' in chars:
+            embed.add_field(name='Биткоин', value='{} $'.format(await self.get_bitcoin_cost()), inline=True )
 
         await context.send(embed = embed)
 

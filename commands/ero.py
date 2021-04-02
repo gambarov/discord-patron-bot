@@ -8,7 +8,7 @@ import random
 
 from bs4 import BeautifulSoup
 
-from utils.checks import is_cartel
+from utils.checks import is_vip_user
 from utils.helper import get_discord_color
 
 logger = logging.getLogger('discord')
@@ -18,7 +18,7 @@ class EroCommand(commands.Cog):
         self.bot = bot
 
     @commands.command(name = "ero", help = "some ero")
-    @commands.check_any(commands.is_owner(), is_cartel())
+    @commands.check_any(commands.is_owner(), is_vip_user())
     async def execute(self, ctx, *, tag='pussy'):
         async with ctx.typing():
             image_id = await self._parse_random_image_id(tag)
@@ -38,9 +38,9 @@ class EroCommand(commands.Cog):
             if isinstance(error.original, AttributeError):
                 return await ctx.send(embed = discord.Embed(description = "Такого раздела не существует", colour = get_discord_color('error')))
         if isinstance(error, commands.CheckFailure):
-            return await ctx.send(embed = discord.Embed(description = "Команда доступна только для членов сервера Manada Gaming", colour = get_discord_color('error')))
+            return await ctx.send(embed = discord.Embed(title = "Доступ ограничен", description = "Команда доступна только для VIP-пользователей", colour = get_discord_color('error')))
         logger.exception(error)
-        await ctx.send("Не удалось получить фото")
+        await ctx.send(embed = discord.Embed(description = "Не удалось получить фото", colour = get_discord_color('error')))
 
     async def _parse_random_image_id(self, tag):
         page = random.choice(range(1, await self._parse_max_page(tag)))

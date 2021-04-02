@@ -11,8 +11,7 @@ class SopranoCommand(commands.Cog):
 
     @commands.command(name = "сопрано", help = "русская рулетка")
     async def execute(self, ctx):
-        embed = discord.Embed(description = "Испытай свою удачу!", colour = get_discord_color('info'))
-        embed.set_author(name = "Русская рулетка")
+        embed = discord.Embed(title = "Русская рулетка", description = "Испытай свою удачу!", colour = get_discord_color('info'))
         message = await ctx.send(embed = embed)
         await message.add_reaction('🔫')
         self.sessions[message.id] = { 'id':message.id, 'users':[] }
@@ -26,30 +25,29 @@ class SopranoCommand(commands.Cog):
 
         message = reaction.message
         session = self.sessions.get(message.id, None)
-
+        # Сообщение - не игровая сессия
         if not session:
             return
+        # Пользователь уже поучаствовал
         if user in session['users']:
             return
-
         session['users'].append(user)
 
-        embed = discord.Embed(description = "Испытай свою удачу!", colour = get_discord_color('success'))
-        embed.set_author(name = "Русская рулетка")
-
+        embed = discord.Embed(title = "Русская рулетка", description = "Испытай свою удачу!", colour = get_discord_color('success'))
+        # Добавляем сообщения о других участниках
         for field in message.embeds[0].fields:
             embed.add_field(name = field.name, value = field.value, inline = False)
 
         name = "{}#{}".format(user.name, user.discriminator)
         
         if (self.possibly()):
-            embed.add_field(name = name, value = "Застрелился", inline = False)
+            embed.add_field(name = name, value = "❌ Застрелился", inline = False)
             embed.colour = get_discord_color('error')
             embed.set_footer(text = "Игра завершена")
             del self.sessions[message.id]
             await message.clear_reactions()
         else:
-            embed.add_field(name = name, value = "Выжил", inline = False)
+            embed.add_field(name = name, value = "🏆 Выжил", inline = False)
         await message.edit(embed = embed)
 
     @commands.Cog.listener()

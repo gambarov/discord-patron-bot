@@ -28,8 +28,7 @@ class InfoCommand(commands.Cog):
         else:
             user = ctx.author
 
-        embed = discord.Embed(colour = user.colour, description = "<@!{}>".format(user.id))
-        embed.set_author(name = "{}#{}".format(user.name, user.discriminator))
+        embed = discord.Embed(title = "{}#{}".format(user.name, user.discriminator), colour = user.colour, description = "<@!{}>".format(user.id))
         embed.set_thumbnail(url = user.avatar_url)
         embed.add_field(
             name = "Created:",
@@ -37,7 +36,6 @@ class InfoCommand(commands.Cog):
         )
         embed.set_footer(text = "ID: {}".format(user.id))
         embed = self.add_member_info(user, embed)
-
         await ctx.send(embed = embed)
 
     @execute.command(name = "сервер", help = "информация о сервере")
@@ -45,8 +43,7 @@ class InfoCommand(commands.Cog):
         guild = ctx.guild
         if ctx.guild is None:
             return await ctx.send(discord.Embed(description = "Вы должны находиться на сервере", colour = get_discord_color('error')))
-        embed = discord.Embed(description = guild.description, colour = get_discord_color('info'))
-        embed.set_author(name = guild.name)
+        embed = discord.Embed(title = guild.name, description = guild.description, colour = get_discord_color('info'))
         embed.add_field(name = "Owner:", value = "<@!{}>".format(guild.owner.id))
         embed.add_field(name = "Members:", value = int(guild.member_count))
         embed.set_thumbnail(url = guild.icon_url)
@@ -55,7 +52,7 @@ class InfoCommand(commands.Cog):
 
     async def cog_command_error(self, ctx, error):
         logger.exception(error)
-        await ctx.send("Не удалось получить информацию")
+        await ctx.send(embed = discord.Embed(description = "Не удалось получить информацию", colour = get_discord_color('error')))
 
     def add_member_info(self, member, embed):
         if not isinstance(member, discord.Member):
@@ -74,7 +71,6 @@ class InfoCommand(commands.Cog):
                     field_value += ', '
             embed.add_field(name = "Roles ({}):".format(len(member.roles) - 1), value = field_value, inline = False)
         return embed
-
 
 def setup(bot):
     bot.add_cog(InfoCommand(bot))

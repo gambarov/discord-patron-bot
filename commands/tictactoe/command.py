@@ -15,8 +15,7 @@ class TicTacToe(commands.Cog):
     @commands.command(name = "тик", help = "крестики-нолики!")
     async def execute(self, ctx):
         grid = GameGrid()
-        embed = discord.Embed(description = str(grid), colour = get_discord_color('info'))
-        embed.set_author(name = "Крестики-нолики")
+        embed = discord.Embed(title = "Крестики-нолики", description = str(grid), colour = get_discord_color('info'))
         message = await ctx.send(embed = embed)
         for i in range(len(grid.matrix)):
             for j in range(len(grid.matrix[i])):
@@ -49,18 +48,17 @@ class TicTacToe(commands.Cog):
         player_emoji = self.manager.get_player_emoji_move(player_type)
         # Помечаем на поле
         grid.set(player_type, player_emoji, reaction.emoji)
-        embed = discord.Embed(description = str(grid), colour = get_discord_color('info'))
-        embed.set_author(name = "Крестики-нолики")
+        embed = discord.Embed(title = "Крестики-нолики", description = str(grid), colour = get_discord_color('info'))
         first_player = session.get_player('first')
         second_player = session.get_player('second')
         embed.add_field(name = "Игрок №1", value = "Ожидается" if first_player == None else "<@!{}>".format(first_player.id))
         embed.add_field(name = "Игрок №2", value = "Ожидается" if second_player == None else "<@!{}>".format(second_player.id))
         player_winner = self.manager.check_for_winner(session)
         if player_winner:
-            embed.add_field(name = "Победитель:", value = "<@!{}>".format(player_winner.id), inline = False)
+            embed.add_field(name = "🏆 Победитель:", value = "<@!{}>".format(player_winner.id), inline = False)
             embed.colour = get_discord_color('success')
         elif self.manager.check_for_draw(session):
-            embed.add_field(name = "Игра завершена", value = "Ничья!", inline = False)
+            embed.add_field(name = "Игра завершена", value = "🍻 Ничья!", inline = False)
             embed.colour = get_discord_color('warning')
         else:
             player_next = first_player if (second_player == player) else second_player

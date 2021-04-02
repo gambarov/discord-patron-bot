@@ -1,8 +1,15 @@
+import discord
 from discord.ext import commands
 
-def is_cartel():
+def is_cartel(ctx):
+    if not isinstance(ctx.channel, discord.TextChannel):
+        return False
+    if not ctx.channel.category:
+        return False
+    return ctx.channel.category.id == 816337597113958411
+
+# TODO:
+def is_vip_user():
     def predicate(ctx):
-        if ctx.guild is None:
-            return False
-        return ctx.guild.id == 629271591762657346
+        return is_cartel(ctx)
     return commands.check(predicate)

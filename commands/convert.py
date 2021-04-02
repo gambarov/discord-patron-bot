@@ -28,8 +28,7 @@ class ConvertCommand(commands.Cog):
 
         result = (amount * (int(from_course['Value']) / int(from_course['Nominal']))) / int((to_course['Value']) / int(to_course['Nominal']))
         result = round(result, 2)
-        embed = discord.Embed(description = "{} {}".format(result, to_valute), colour = get_discord_color('success'))
-        embed.set_author(name = "Результат:")
+        embed = discord.Embed(title = "Результат:", description = "{} {}".format(result, to_valute), colour = get_discord_color('success'))
         await ctx.send(embed = embed)
 
     @execute.error

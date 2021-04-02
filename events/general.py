@@ -1,5 +1,5 @@
-from discord.ext import commands
 import logging
+from discord.ext import commands
 
 emojis = [ '\U0001F602', '\U0000261D', '\U0001F44D', '\U0001F44E' ]
 
