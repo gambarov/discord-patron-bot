@@ -47,7 +47,7 @@ class SopranoCommand(commands.Cog):
             del self.sessions[message.id]
             await message.clear_reactions()
         else:
-            embed.add_field(name = name, value = "🏆 Выжил", inline = False)
+            embed.add_field(name = name, value = "🎉 Выжил", inline = False)
         await message.edit(embed = embed)
 
     @commands.Cog.listener()
