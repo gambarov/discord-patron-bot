@@ -1,6 +1,5 @@
 *.env
 *.bat
-*db.json
 *.log
 
 # Byte-compiled / optimized / DLL files

@@ -66,7 +66,6 @@ class TicTacToe(commands.Cog):
             if player_next:
                 move_emoji = self.manager.get_player_emoji_move(session.get_player_type(player_next))
                 embed.add_field(name = "Текущий ход", value = "{}#{} ({})".format(player_next.name, player_next.discriminator, move_emoji), inline = False)
-
         await message.clear_reaction(reaction.emoji)
         await message.edit(embed = embed)
 
