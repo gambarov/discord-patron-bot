@@ -1,5 +1,5 @@
 import os, json
-from utils.helper import get_discord_color
+from utils.helper import get_discord_color, get_error_embed
 import aiohttp
 
 import discord, logging
@@ -19,7 +19,7 @@ class WeatherCommand(commands.Cog):
         async with aiohttp.ClientSession() as session:
             async with session.post(self.url, data = { 'key':KEY, 'lang':'ru', 'q':city }) as response:
                 if response.status != 200:
-                    return await context.send(embed = discord.Embed(description = "Не могу получить данные", colour = get_discord_color('error')))
+                    return await context.send(embed = get_error_embed(desc = "Не могу получить данные"))
                 data = json.loads(await response.text())
                 await context.send(embed = self.parse_to_embed(data))
     
@@ -28,11 +28,11 @@ class WeatherCommand(commands.Cog):
         if isinstance(error, commands.MissingRequiredArgument):
             return await context.send("Укажите город")
         logger.exception(error)
-        await context.send(embed = discord.Embed(description = "Не удалось получить погоду", colour = get_discord_color('error')))
+        await context.send(embed = get_error_embed(desc = "Не удалось получить погоду"))
 
     def parse_to_embed(self, data):
         if (not 'location' in data) or (len(data['current']) == 0):
-            return discord.Embed(description = "Данные отсутствуют, попробуйте позже", colour = get_discord_color('error'))
+            return get_error_embed(desc = "Данные отсутствуют, попробуйте позже")
 
         location = data['location']
         current = data['current']

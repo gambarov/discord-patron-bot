@@ -20,12 +20,12 @@ class Economy():
             amount = int(amount)
             if amount < 1: raise Exception()            
         except:
-            raise EconomyException(":no_entry_sign: Укажите корректное кол-во $", get_discord_color('error'))
+            raise EconomyException("⛔ Укажите корректное кол-во $", get_discord_color('error'))
 
         account = Economy.get(member)
 
         if account['dollars'] < amount:
-            raise EconomyException(":no_entry_sign: Недостаточно средств", get_discord_color('error'))
+            raise EconomyException("⛔ Недостаточно средств", get_discord_color('error'))
 
         bitcoins_to_get = amount / await CourseCommand.get_bitcoin_cost()
         Economy.update(member, account['dollars'] - amount, account['bitcoins'] + bitcoins_to_get)
@@ -37,12 +37,12 @@ class Economy():
             percent = int(percent)
             if percent < 1 or percent > 100: raise Exception()
         except:
-            raise EconomyException(":no_entry_sign: Укажите корректный % продажи", get_discord_color('error'))
+            raise EconomyException("⛔ Укажите корректный % продажи", get_discord_color('error'))
 
         account = Economy.get(member)
 
         if account['bitcoins'] == 0:
-            raise EconomyException(":warning: На счету отсутствуют BTC", get_discord_color('warning'))
+            raise EconomyException("⛔ На счету отсутствуют BTC", get_discord_color('error'))
 
         bitcoins_to_sell = (account['bitcoins'] * percent) / 100
         dollars_to_get = bitcoins_to_sell * (await CourseCommand.get_bitcoin_cost())
@@ -72,5 +72,5 @@ class Economy():
         assert(isinstance(member, discord.abc.User))
         user = { 'id':member.id, 'dollars':1000, 'bitcoins':0 }
         db.insert(user)
-        logger.info("New market member: {}".format(str(member)))
+        logging.info("New market member: {}".format(str(member)))
         return user

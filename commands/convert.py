@@ -1,6 +1,6 @@
 import discord, logging
 from discord.ext import commands
-from utils.helper import get_discord_color
+from utils.helper import get_discord_color, get_error_embed
 from commands.course import CourseCommand
 
 logger = logging.getLogger('discord')
@@ -19,9 +19,9 @@ class ConvertCommand(commands.Cog):
         to_valute = to_valute.upper()        
 
         if not from_valute in courses:
-            return await ctx.send(embed = discord.Embed(description = "Валюта '{}' не существует".format(from_valute), colour = get_discord_color('error')))
+            return await ctx.send(embed = get_error_embed(desc = "Валюта '{}' не существует".format(from_valute)))
         if not to_valute in courses:
-            return await ctx.send(embed = discord.Embed(description = "Валюта '{}' не существует".format(to_valute), colour = get_discord_color('error')))
+            return await ctx.send(embed = get_error_embed(desc = "Валюта '{}' не существует".format(to_valute)))
         
         from_course = courses[from_valute]
         to_course = courses[to_valute]
@@ -39,9 +39,9 @@ class ConvertCommand(commands.Cog):
             embed.add_field(name = "Пример", value = "!con 1000 rub usd", inline=False)
             return await ctx.send(embed = embed)
         if isinstance(error, commands.BadArgument):
-            return await ctx.send(embed = discord.Embed(description = "Некорректный ввод", colour = get_discord_color('error')))
+            return await ctx.send(embed = get_error_embed(desc = "Некорректный ввод"))
         logger.exception(error)
-        await ctx.send("Неизвестная ошибка")
+        await ctx.send(embed = get_error_embed("Неизвестная ошибка"))
 
 def setup(bot):
     bot.add_cog(ConvertCommand(bot))

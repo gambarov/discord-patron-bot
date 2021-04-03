@@ -1,6 +1,6 @@
 from discord.ext import commands
 import discord, logging
-from utils.helper import get_discord_color
+from utils.helper import get_discord_color, get_error_embed
 
 from commands.tictactoe.manager import GameManager
 from commands.tictactoe.grid import GameGrid
@@ -75,9 +75,9 @@ class TicTacToe(commands.Cog):
            
     async def cog_command_error(self, ctx, error):
         if isinstance(error, commands.BadArgument):
-            return await ctx.send(embed = discord.Embed(description = "Размер поля должен быть целым числом", colour = get_discord_color('error')))
+            return await ctx.send(embed = get_error_embed(desc = "Размер поля должен быть целым числом"))
         logger.exception(error)
-        await ctx.send(embed = discord.Embed(description = "Неизвестная ошибка!", colour = get_discord_color('error')))
+        await ctx.send(embed = get_error_embed(desc = "Неизвестная ошибка!"))
 
 def setup(bot):
     bot.add_cog(TicTacToe(bot))

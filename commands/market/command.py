@@ -2,7 +2,7 @@ import discord, logging
 
 from discord.ext import commands
 from commands.market.economy import Economy, EconomyException
-from utils.helper import get_discord_color
+from utils.helper import get_discord_color, get_error_embed
 
 logger = logging.getLogger('discord')
 
@@ -26,7 +26,7 @@ class ExchangeCommand(commands.Cog):
     async def buy(self, ctx, amount):
         try:
             bitcoins = await Economy.buy(ctx.author, amount)
-            await ctx.send(embed = discord.Embed(description = "Вы успешно приобрели {} BTC за {} $".format(bitcoins, amount), colour = get_discord_color('success')))
+            await ctx.send(embed = discord.Embed(description = "⚙️ Вы успешно приобрели {} BTC за {} $".format(bitcoins, amount), colour = get_discord_color('success')))
         except EconomyException as e:
             await ctx.send(embed = discord.Embed(description = e.message, colour = e.colour))
 
@@ -34,7 +34,7 @@ class ExchangeCommand(commands.Cog):
     async def sell(self, ctx, percent):
         try:
             bitcoins = await Economy.sell(ctx.author, percent)
-            await ctx.send(embed = discord.Embed(description = "Вы успешно продали {} BTC".format(bitcoins), colour = get_discord_color('success')))
+            await ctx.send(embed = discord.Embed(description = "⚙️ Вы успешно продали {} BTC".format(bitcoins), colour = get_discord_color('success')))
         except EconomyException as e:
             await ctx.send(embed = discord.Embed(description = e.message, colour = e.colour))
     
@@ -45,9 +45,9 @@ class ExchangeCommand(commands.Cog):
 
     async def cog_command_error(self, ctx, error):
         if isinstance(error, commands.MissingRequiredArgument):
-            return await ctx.send(embed = discord.Embed(description = ":warning: Укажите аргумент", colour = get_discord_color('warning')))
+            return await ctx.send(embed = get_error_embed(desc = "Укажите аргумент"))
         logger.exception(error)
-        await ctx.send(embed = discord.Embed(description = "Неизвестная ошибка", colour = get_discord_color('error')))
+        await ctx.send(embed = get_error_embed(desc = "Неизвестная ошибка"))
 
 def setup(bot):
     bot.add_cog(ExchangeCommand(bot))

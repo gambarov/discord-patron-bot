@@ -1,8 +1,11 @@
+from utils.helper import get_error_embed
 import aiohttp
 import json
 
-import discord
+import discord, logging
 from discord.ext import commands
+
+logger = logging.getLogger('discord')
 
 class CourseCommand(commands.Cog):
     def __init__(self, bot):
@@ -36,6 +39,10 @@ class CourseCommand(commands.Cog):
             embed.add_field(name='Биткоин', value='{} $'.format(await self.get_bitcoin_cost()), inline=True )
 
         await context.send(embed = embed)
+
+    async def cog_command_error(self, ctx, error):
+        logger.exception(error)
+        await ctx.send(embed = get_error_embed(desc = "Не удалось получить данные"))
 
     @staticmethod
     async def get_courses():

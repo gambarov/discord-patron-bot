@@ -1,6 +1,6 @@
 import discord, re, logging
 from discord.ext import commands
-from utils.helper import get_discord_color
+from utils.helper import get_discord_color, get_error_embed
 
 logger = logging.getLogger('discord')
 
@@ -24,7 +24,7 @@ class InfoCommand(commands.Cog):
             except:
                 user = ctx.guild.get_member_named(name)
             if user is None:
-                return await ctx.send(embed = discord.Embed(description = "Пользователь '{}' не найден".format(name), colour = get_discord_color('error')))
+                return await ctx.send(embed = get_error_embed(desc = "Пользователь '{}' не найден".format(name)))
         else:
             user = ctx.author
 
@@ -52,7 +52,7 @@ class InfoCommand(commands.Cog):
 
     async def cog_command_error(self, ctx, error):
         logger.exception(error)
-        await ctx.send(embed = discord.Embed(description = "Не удалось получить информацию", colour = get_discord_color('error')))
+        await ctx.send(embed = get_error_embed(desc = "Не удалось получить информацию"))
 
     def add_member_info(self, member, embed):
         if not isinstance(member, discord.Member):
