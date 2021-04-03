@@ -11,10 +11,10 @@ class SopranoCommand(commands.Cog):
 
     @commands.command(name = "сопрано", help = "русская рулетка")
     async def execute(self, ctx):
-        embed = discord.Embed(title = "Русская рулетка", description = "Испытай свою удачу!", colour = get_discord_color('info'))
+        embed = discord.Embed(title = "Русская рулетка", description = "🎲 Испытай свою удачу!", colour = get_discord_color('info'))
         message = await ctx.send(embed = embed)
         await message.add_reaction('🔫')
-        self.sessions[message.id] = { 'id':message.id, 'users':[] }
+        self.sessions[message.id] = { 'id':message.id }
 
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction, user):
@@ -28,17 +28,17 @@ class SopranoCommand(commands.Cog):
         # Сообщение - не игровая сессия
         if not session:
             return
-        # Пользователь уже поучаствовал
-        if user in session['users']:
-            return
-        session['users'].append(user)
 
-        embed = discord.Embed(title = "Русская рулетка", description = "Испытай свою удачу!", colour = get_discord_color('success'))
-        # Добавляем сообщения о других участниках
-        for field in message.embeds[0].fields:
-            embed.add_field(name = field.name, value = field.value, inline = False)
+        embed = discord.Embed(title = "Русская рулетка", description = "🎲 Испытай свою удачу!", colour = get_discord_color('success'))
 
         name = "{}#{}".format(user.name, user.discriminator)
+
+        # Добавляем сообщения о других участниках
+        for field in message.embeds[0].fields:
+            # Если юзер уже был добавлен
+            if field.name == name:
+                return
+            embed.add_field(name = field.name, value = field.value, inline = False)
         
         if (self.possibly()):
             embed.add_field(name = name, value = "❌ Застрелился", inline = False)
