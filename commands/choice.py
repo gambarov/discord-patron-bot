@@ -10,7 +10,7 @@ class ChoiceCommand(commands.Cog):
     @commands.command(name = "выбери", help = "выбор случайного варианта (ввод через 'или')")
     async def execute(self, context, *, variants):
         texts = [ "Определенно,", "Думаю, что", "Вероятно,", "Скорее всего,", "" ]
-        variants = [ variant.strip() for variant in variants.split('или') ]
+        variants = [ variant.strip() for variant in variants.split(' или ') ]
         variant = random.choice(variants)
         await context.send('{} {}'.format(random.choice(texts), variant))
 
