@@ -13,7 +13,7 @@ class GoogleDictCommand(commands.Cog):
             async with aiohttp.ClientSession() as session:
                 async with session.get('https://api.dictionaryapi.dev/api/v2/entries/ru/{}'.format(text)) as response:
                     if response.status != 200:
-                        return await context.send(embed = discord.embed(description = "Не удалось получить определение", colour = get_discord_color('error')))
+                        return await context.send(embed = discord.Embed(description = "Не удалось получить определение", colour = get_discord_color('error')))
                     json_data = json.loads(await response.text())
                     await context.send(self.parse_definition(json_data))
     

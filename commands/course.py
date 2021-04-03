@@ -14,11 +14,13 @@ class CourseCommand(commands.Cog):
         chars = self.default_chars if chars == None else chars.split()
         embed = discord.Embed(colour = 0x4299F5)
         courses = await self.get_courses()
+        chars = [ char.upper() for char in chars ]
+
         # Перебираем все валюты
         for code, data in courses.items():
             for need in chars:
                 # Если попалась с нужным кодом
-                if code == need.upper():
+                if code == need:
                     nominal = data['Nominal'] if int(data['Nominal']) > 1 else ''
                     name  = data['Name']
                     value = round(data['Value'], 2)
