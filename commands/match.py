@@ -1,5 +1,4 @@
-import json
-import os, discord, logging, random, aiohttp
+import os, json, discord, logging, aiohttp
 from utils.helper import get_discord_color, get_error_embed
 from discord.ext import commands
 
@@ -12,7 +11,7 @@ class LoveMatchCommand(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name = "lm", help = "любовная совместимость")
+    @commands.command(name = "love", help = "любовная совместимость")
     async def execute(self, context, *, names):
         names = [ name.strip() for name in names.split(' and ') ]
         if len(names) <= 1:

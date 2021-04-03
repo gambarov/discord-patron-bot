@@ -16,11 +16,14 @@ class TicTacToe(commands.Cog):
     async def execute(self, ctx):
         grid = GameGrid()
         embed = discord.Embed(title = "Крестики-нолики", description = str(grid), colour = get_discord_color('info'))
+        embed.set_footer(text = "⚙️ Подготовка сессии, подождите...")
         message = await ctx.send(embed = embed)
         for i in range(len(grid.matrix)):
             for j in range(len(grid.matrix[i])):
                 emoji = grid.matrix[i][j]['emoji']
                 await message.add_reaction(emoji)
+        embed.set_footer(text = "👀 Ожидание игроков...")
+        await message.edit(embed = embed)
         self.manager.add_session(id = message.id, grid = grid)
 
     @commands.Cog.listener()
