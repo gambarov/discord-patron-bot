@@ -8,11 +8,11 @@ class PlayerAlreadyExistsException(Exception):
 
 logger = logging.getLogger('discord')
 
-class Session():
-    def __init__(self, id, grid) -> None:
-        self.id = id
-        self.players = { 'first':None, 'second':None, 'current':None }
+class GameSession():
+    def __init__(self, message_id, grid) -> None:
+        self.id = message_id
         self.grid = grid
+        self.players = { 'first':None, 'second':None, 'current':None }
 
     def register(self, player_type: str, user: discord.abc.User):
         # Неизвестный тип игрока

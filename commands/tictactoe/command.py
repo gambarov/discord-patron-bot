@@ -15,13 +15,17 @@ class TicTacToe(commands.Cog):
     @commands.command(name = "тик", help = "крестики-нолики!")
     async def execute(self, ctx):
         grid = GameGrid()
+
         embed = discord.Embed(title = "Крестики-нолики", description = str(grid), colour = get_discord_color('info'))
         embed.set_footer(text = "⚙️ Подготовка сессии, подождите...")
+
         message = await ctx.send(embed = embed)
+
         for i in range(len(grid.matrix)):
             for j in range(len(grid.matrix[i])):
                 emoji = grid.matrix[i][j]['emoji']
                 await message.add_reaction(emoji)
+
         embed.set_footer(text = "👀 Ожидание игроков...")
         await message.edit(embed = embed)
         self.manager.add_session(id = message.id, grid = grid)
@@ -51,23 +55,27 @@ class TicTacToe(commands.Cog):
         player_emoji = self.manager.get_player_emoji_move(player_type)
         # Помечаем на поле
         grid.set(player_type, player_emoji, reaction.emoji)
+
         embed = discord.Embed(title = "Крестики-нолики", description = str(grid), colour = get_discord_color('info'))
-        first_player = session.get_player('first')
-        second_player = session.get_player('second')
-        embed.add_field(name = "Игрок №1", value = "Ожидается" if first_player == None else "<@!{}>".format(first_player.id))
-        embed.add_field(name = "Игрок №2", value = "Ожидается" if second_player == None else "<@!{}>".format(second_player.id))
-        player_winner = self.manager.check_for_winner(session)
-        if player_winner:
-            embed.add_field(name = "🏆 Победитель:", value = "<@!{}>".format(player_winner.id), inline = False)
+
+        pfirst = session.get_player('first')
+        psecond = session.get_player('second')
+        
+        embed.add_field(name = "Игрок №1", value = "<@!{}>".format(pfirst.id))
+        embed.add_field(name = "Игрок №2", value = "Ожидается" if psecond == None else "<@!{}>".format(psecond.id))
+
+        winner = self.manager.check_for_winner(session)
+        if winner:
+            embed.add_field(name = "🏆 Победитель:", value = "<@!{}>".format(winner.id), inline = False)
             embed.colour = get_discord_color('success')
         elif self.manager.check_for_draw(session):
             embed.add_field(name = "Игра завершена", value = "🍻 Ничья!", inline = False)
             embed.colour = get_discord_color('warning')
         else:
-            player_next = first_player if (second_player == player) else second_player
-            if player_next:
-                move_emoji = self.manager.get_player_emoji_move(session.get_player_type(player_next))
-                embed.add_field(name = "Текущий ход", value = "{} ({})".format("<@!{}>".format(player_next.id), move_emoji), inline = False)
+            pnext = pfirst if (psecond == player) else psecond
+            if pnext:
+                move_emoji = self.manager.get_player_emoji_move(session.get_player_type(pnext))
+                embed.add_field(name = "Текущий ход", value = "{} ({})".format("<@!{}>".format(pnext.id), move_emoji), inline = False)
         await message.edit(embed = embed)
 
     @commands.Cog.listener()
