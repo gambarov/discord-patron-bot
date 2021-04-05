@@ -31,7 +31,7 @@ class EroCommand(commands.Cog):
                         raise Exception('Could\'nt download file')
                     
                     data = io.BytesIO(await response.read())
-                    await ctx.send(file = discord.File(data, '{}.png'.format(tag if tag else 'ero'), spoiler = False))
+                    await ctx.send(file = discord.File(data, '{}.png'.format(tag if tag else 'ero'), spoiler = True))
 
     @execute.error
     async def on_error(self, ctx, error):
