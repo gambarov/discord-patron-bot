@@ -20,10 +20,10 @@ class EroCommand(commands.Cog):
 
     @commands.command(name = "ero", help = "some ero")
     @commands.check_any(commands.is_owner(), is_vip_user())
-    async def execute(self, ctx, *, tag='pussy'):
+    async def execute(self, ctx, *, tag = ''):
         async with ctx.typing():
-            image_id = await self.parse_random_image_id(tag)
-            url = await self.parse_image_url(image_id)
+            img_id = str(random.randrange(1, 32000)) if not tag else await self.parse_random_image_id(tag)
+            url = await self.parse_image_url(img_id)
 
             async with aiohttp.ClientSession() as session:
                 async with session.get(url) as response:
@@ -31,7 +31,7 @@ class EroCommand(commands.Cog):
                         raise Exception('Could\'nt download file')
                     
                     data = io.BytesIO(await response.read())
-                    await ctx.send(file = discord.File(data, '{}.png'.format(tag), spoiler = True))
+                    await ctx.send(file = discord.File(data, '{}.png'.format(tag if tag else 'ero'), spoiler = False))
 
     @execute.error
     async def on_error(self, ctx, error):
@@ -52,13 +52,14 @@ class EroCommand(commands.Cog):
         ids = []
 
         for wpmini in wpminis:
-            a = wpmini.find('a')
-            if a:
+            try:
+                a = wpmini.find('a')
                 img = a.find('img')
-                if img:
-                    img_id = img.get('src').rsplit('/', 1)[-1]  # split url and get last (id.jpg)
-                    img_id = os.path.splitext(img_id)[0]            # remove ext (id)
-                    ids.append(img_id)
+                img_id = img.get('src').rsplit('/', 1)[-1]      # split url and get last (id.jpg)
+                img_id = os.path.splitext(img_id)[0]            # remove ext (id)
+                ids.append(img_id)
+            except:
+                pass
         return random.choice(ids)
 
     async def parse_image_url(self, img_id):
@@ -66,14 +67,13 @@ class EroCommand(commands.Cog):
         soup = BeautifulSoup(markup=response, features="html.parser") 
         viewwallpaper = soup.find('div', { 'class':'viewwallpaper'} )
 
-        if viewwallpaper:
+        try:
             a = viewwallpaper.find('a', { 'class':'img' })
-            if a:
-                img = a.find('img')
-                if img:
-                    url = img.get('src')
-                    return 'https://erowall.com/' + url 
-        return None
+            img = a.find('img')
+            url = img.get('src')
+            return 'https://erowall.com/{}'.format(url)  
+        except:
+            return None
 
     async def parse_max_page(self, tag):
         try:
