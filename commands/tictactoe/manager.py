@@ -15,11 +15,11 @@ class GameManager:
     def delete_session(self, message_id):
         del self.sessions[message_id]
 
-    def check_for_draw(self, session):
+    def check_for_draw(self, session: GameSession):
         return (session.grid.move_count == pow(session.grid.size, 2))
 
-    def check_for_winner(self, session):
-        for player in session.player():
+    def check_for_winner(self, session: GameSession):
+        for player in session.players():
             def check_matrix(matrix):
                 # По горизонтали
                 for x in range(len(matrix)):

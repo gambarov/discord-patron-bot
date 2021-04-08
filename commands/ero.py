@@ -38,7 +38,7 @@ class EroCommand(commands.Cog):
         if isinstance(error, commands.CommandInvokeError):
             if isinstance(error.original, AttributeError):
                 return await ctx.send(embed = get_error_embed(desc = "Такого раздела не существует"))
-        if isinstance(error, commands.CheckFailure):
+        if isinstance(error, commands.CheckAnyFailure):
             return await ctx.send(embed = discord.Embed(title = "⛔ Доступ ограничен", description = "Команда доступна только для VIP-пользователей", colour = get_discord_color('error')))
         logger.exception(error)
         await ctx.send(embed = get_error_embed(desc = "Не удалось получить фото"))

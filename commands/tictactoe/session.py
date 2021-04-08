@@ -32,7 +32,7 @@ class GameSession():
         players = [ self.second, self.first ]
         return filter(None, players)
 
-    def get(self, user: discord.abc.User):
+    def get(self, user: discord.Member):
         self.add(user)
         if user == self.first.user:
             return self.first
@@ -40,7 +40,7 @@ class GameSession():
             return self.second
         return False
 
-    def add(self, user: discord.abs.User):
+    def add(self, user: discord.Member):
         if not self.first:
             self.first = Player(user, 'first', '❌')
         elif not self.second and user != self.first.user:
@@ -49,10 +49,10 @@ class GameSession():
     def ready(self):
         return self.first and self.second
 
-    def exists(self, user: discord.abc.User):
+    def exists(self, user: discord.Member):
         return self.first.user == user or self.second.user == user
 
-    def move_next(self, user: discord.abc.User, shift: bool = True):
+    def move_next(self, user: discord.Member):
         # Пытаемся добавить игрока
         player = self.get(user)
         # Сессия еще не готова, просто добавляем и возвращаем игроков по очереди
@@ -65,6 +65,5 @@ class GameSession():
             if self.previous.user == user:
                 return False
             current = self.first if self.previous == self.second else self.second
-            if shift:
-                self.previous = current
+            self.previous = current
             return current

@@ -15,6 +15,7 @@ class TicTacToe(commands.Cog):
         self.manager = GameManager()
 
     @commands.command(name="тик", help="крестики-нолики!")
+    @commands.check_any(commands.guild_only())
     async def execute(self, ctx):
         grid = GameGrid()
 
@@ -31,7 +32,7 @@ class TicTacToe(commands.Cog):
 
         embed.set_footer(text="👀 Ожидание игроков...")
         await message.edit(embed=embed)
-        self.manager.add_session(id=message.id, grid=grid)
+        self.manager.add_session(message_id=message.id, grid=grid)
 
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction, user):
@@ -78,7 +79,7 @@ class TicTacToe(commands.Cog):
             self.manager.delete_session(message.id)
         else:
             # Получаем инфу о след игроке
-            pnext = session.move_next(user=user, shift=False)
+            pnext = session.first if session.previous == session.second else session.second
             if pnext:
                 embed.add_field(name="Текущий ход", value="{} ({})".format(
                     "<@!{}>".format(pnext.user.id), pnext.emoji), inline=False)
@@ -93,6 +94,8 @@ class TicTacToe(commands.Cog):
     async def cog_command_error(self, ctx, error):
         if isinstance(error, commands.BadArgument):
             return await ctx.send(embed=get_error_embed(desc="Размер поля должен быть целым числом"))
+        if isinstance(error, commands.CheckAnyFailure):
+            return await ctx.send(embed=get_error_embed(desc="Команда доступна только на серверах"))
         logger.exception(error)
         await ctx.send(embed=get_error_embed(desc="Неизвестная ошибка!"))
 
