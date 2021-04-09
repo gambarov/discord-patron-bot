@@ -1,8 +1,6 @@
 import logging
 from commands.tictactoe.session import GameSession
 
-logger = logging.getLogger('discord')
-
 
 class GameManager:
     def __init__(self) -> None:

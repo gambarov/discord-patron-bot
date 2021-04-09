@@ -1,5 +1,4 @@
 import discord
-import logging
 
 
 class UndefinedPlayerTypeException(Exception):
@@ -8,9 +7,6 @@ class UndefinedPlayerTypeException(Exception):
 
 class PlayerAlreadyExistsException(Exception):
     pass
-
-
-logger = logging.getLogger('discord')
 
 
 class Player():

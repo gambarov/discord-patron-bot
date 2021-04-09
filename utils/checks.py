@@ -10,6 +10,6 @@ def is_cartel(ctx):
 
 # TODO:
 def is_vip_user():
-    def predicate(ctx):
+    async def predicate(ctx):
         return is_cartel(ctx)
     return commands.check(predicate)

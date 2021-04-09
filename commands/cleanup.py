@@ -24,11 +24,12 @@ class CleanupCommand(commands.Cog):
         
         await channel.purge(limit = limit, check = is_trash_message)
 
-    # async def cog_command_error(self, ctx, error):
-    #     if (isinstance(error.original, AttributeError)):
-    #         return await ctx.send(embed = utils.helper.get_error_embed(desc = "Команда предназначена только для серверов"))
-    #     logger.exception(error)
-    #     await ctx.send(embed = utils.helper.get_error_embed(desc = "Не удалось провести уборку"))
+    @execute.error
+    async def on_error(self, ctx, error):
+        if (isinstance(error.original, AttributeError)):
+            return await ctx.send(embed = utils.helper.get_error_embed(desc = "Команда предназначена только для серверов"))
+        logger.exception(error)
+        await ctx.send(embed = utils.helper.get_error_embed(desc = "Не удалось провести уборку"))
 
 def setup(bot):
     bot.add_cog(CleanupCommand(bot))
