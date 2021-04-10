@@ -1,7 +1,9 @@
-import discord, logging
+import discord
+import logging
 from discord.ext import commands
 
-import io, os
+import io
+import os
 import aiohttp
 
 import random
@@ -13,46 +15,41 @@ from utils.helper import get_discord_color, get_error_embed
 
 logger = logging.getLogger(__name__)
 
+
 class EroCommand(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.tags = {}
+        self.client = aiohttp.ClientSession()
 
-    @commands.command(name = "ero", help = "some ero")
+    @commands.command(name="ero", help="some ero")
     @commands.check_any(commands.is_owner(), is_vip_user())
-    async def execute(self, ctx, *, tag = ''):
+    @commands.cooldown(rate=1, per=3, type=commands.BucketType.channel)
+    async def execute(self, ctx, *, tag=''):
         async with ctx.typing():
-            img_id = str(random.randrange(1, 32000)) if not tag else await self.parse_random_image_id(tag)
-            url = await self.parse_image_url(img_id)
-
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url) as response:
-                    if response.status != 200:
-                        raise Exception('Could\'nt download file')
-                    
-                    data = io.BytesIO(await response.read())
-                    await ctx.send(file = discord.File(data, '{}.png'.format(str(img_id)), spoiler = True))
+            # Если не указан тег, сразу генерируем рандомный ИД картинки 
+            img_id = random.randrange(1, 32000) if not tag else await self.parse_random_image_id(tag)
+            img_url = await self.parse_image_url(img_id)
+            response = await self.client.get(img_url)
+            data = io.BytesIO(await response.read())
+            await ctx.send(file=discord.File(data, f'{str(img_id)}.png', spoiler=True))
 
     @execute.error
     async def on_error(self, ctx, error):
         if isinstance(error, commands.CommandInvokeError):
             if isinstance(error.original, AttributeError):
-                return await ctx.send(embed = get_error_embed(desc = "Такого раздела не существует"))
+                return await ctx.send(embed=get_error_embed(desc="Такого раздела не существует"))
         if isinstance(error, commands.CheckAnyFailure):
-            for check in error.checks:
-                print(check)
-                if check == is_vip_user:
-                    print("true!")
-            return await ctx.send(embed = discord.Embed(title = "⛔ Доступ ограничен", description = "Команда доступна только для VIP-пользователей", colour = get_discord_color('error')))
+            return await ctx.send(embed=discord.Embed(title="⛔ Доступ ограничен", description="Команда доступна только для VIP-пользователей", colour=get_discord_color('error')))
         logger.exception(error)
-        await ctx.send(embed = get_error_embed(desc = "Не удалось получить фото"))
+        await ctx.send(embed=get_error_embed(desc="Не удалось получить фото"))
 
     async def parse_random_image_id(self, tag):
         page = random.choice(range(1, await self.parse_max_page(tag) + 1))
-        response = await self.get_response_text("https://erowall.com/teg/{}/page/{}".format(tag, page))
-        soup = BeautifulSoup(markup = response, features = "html.parser") 
-        content = soup.find('div', { 'class':'content'} )
-        wpminis = content.find_all('div', { 'class':'wpmini' } )
+        response = await self.client.get(f"https://erowall.com/teg/{tag}/page/{page}")
+        soup = BeautifulSoup(markup=await response.text(), features="html.parser")
+        content = soup.find('div', {'class': 'content'})
+        wpminis = content.find_all('div', {'class': 'wpmini'})
         ids = []
 
         for wpmini in wpminis:
@@ -67,29 +64,29 @@ class EroCommand(commands.Cog):
         return random.choice(ids)
 
     async def parse_image_url(self, img_id):
-        response = await self.get_response_text('https://erowall.com/w/{}/'.format(img_id))
-        soup = BeautifulSoup(markup=response, features="html.parser") 
-        viewwallpaper = soup.find('div', { 'class':'viewwallpaper'} )
+        response = await self.client.get(f"https://erowall.com/w/{str(img_id)}/")
+        soup = BeautifulSoup(markup=await response.text(), features="html.parser")
+        viewwallpaper = soup.find('div', {'class': 'viewwallpaper'})
 
         try:
-            a = viewwallpaper.find('a', { 'class':'img' })
+            a = viewwallpaper.find('a', {'class': 'img'})
             img = a.find('img')
             url = img.get('src')
-            return 'https://erowall.com/{}'.format(url)  
+            return 'https://erowall.com/{}'.format(url)
         except:
             return None
 
     async def parse_max_page(self, tag):
         try:
-            num = self.tags[tag]['max_page']
-            return num
+            return self.tags[tag]['max_page']
         except:
             pass
 
+        response = await self.client.get(f"https://erowall.com/search/{tag}/")
         soup = BeautifulSoup(
-            markup = await self.get_response_text("https://erowall.com/search/{}/".format(tag)), 
-            features = "html.parser") 
-        paginator = soup.find('div', { 'class':'paginator' })
+            markup=await response.text(),
+            features="html.parser")
+        paginator = soup.find('div', {'class': 'paginator'})
         ul = paginator.find('ul')
         num = 1
         for li in ul.find_all('li'):
@@ -98,16 +95,9 @@ class EroCommand(commands.Cog):
             except:
                 pass
         # Кешируем данные
-        self.tags[tag] = { 'max_page':num }
+        self.tags[tag] = {'max_page': num}
         return num
 
-    async def get_response_text(self, url):
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url) as response:
-                if response.status != 200:
-                    return ''
-                await session.close()
-                return await response.text()
 
 def setup(bot):
     bot.add_cog(EroCommand(bot))
