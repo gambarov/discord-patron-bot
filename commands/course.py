@@ -5,7 +5,7 @@ import json
 import discord, logging
 from discord.ext import commands
 
-logger = logging.getLogger('discord')
+logger = logging.getLogger(__name__)
 
 class CourseCommand(commands.Cog):
     def __init__(self, bot):

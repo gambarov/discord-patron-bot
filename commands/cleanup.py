@@ -2,7 +2,7 @@ from discord.ext import commands
 import logging
 import utils.helper
 
-logger = logging.getLogger('discord')
+logger = logging.getLogger(__name__)
 
 class CleanupCommand(commands.Cog):
     def __init__(self, bot):

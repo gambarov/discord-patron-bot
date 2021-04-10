@@ -11,7 +11,7 @@ from bs4 import BeautifulSoup
 from utils.checks import is_vip_user
 from utils.helper import get_discord_color, get_error_embed
 
-logger = logging.getLogger('discord')
+logger = logging.getLogger(__name__)
 
 class EroCommand(commands.Cog):
     def __init__(self, bot):

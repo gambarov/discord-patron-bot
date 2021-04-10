@@ -3,7 +3,7 @@ from discord.ext import commands
 from utils.helper import get_discord_color, get_error_embed
 from commands.course import CourseCommand
 
-logger = logging.getLogger('discord')
+logger = logging.getLogger(__name__)
 
 class ConvertCommand(commands.Cog):
     def __init__(self, bot):

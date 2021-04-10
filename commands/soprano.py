@@ -2,7 +2,7 @@ import discord, random, logging
 from discord.ext import commands
 from utils.helper import get_discord_color, get_error_embed
 
-logger = logging.getLogger('discord')
+logger = logging.getLogger(__name__)
 
 class SopranoCommand(commands.Cog):
     def __init__(self, bot):

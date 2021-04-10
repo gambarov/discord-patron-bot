@@ -5,7 +5,7 @@ import aiohttp
 import discord, logging
 from discord.ext import commands
 
-logger = logging.getLogger('discord')
+logger = logging.getLogger(__name__)
 
 KEY = os.getenv('WEATHER_KEY')
 

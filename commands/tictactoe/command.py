@@ -6,6 +6,7 @@ from utils.helper import get_discord_color, get_error_embed
 from commands.tictactoe.manager import GameManager
 from commands.tictactoe.grid import GameGrid
 
+logger = logging.getLogger(__name__)
 
 class TicTacToe(commands.Cog):
     def __init__(self, bot):
@@ -94,7 +95,7 @@ class TicTacToe(commands.Cog):
             return await ctx.send(embed=get_error_embed(desc="Размер поля должен быть целым числом"))
         if isinstance(error, commands.CheckAnyFailure):
             return await ctx.send(embed=get_error_embed(desc="Команда доступна только на серверах"))
-        logging.exception(error)
+        logger.exception(error)
         await ctx.send(embed=get_error_embed(desc="Неизвестная ошибка!"))
 
 
