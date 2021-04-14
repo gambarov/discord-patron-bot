@@ -41,6 +41,8 @@ class EroCommand(commands.Cog):
                 return await ctx.send(embed=get_error_embed(desc="Такого раздела не существует"))
         if isinstance(error, commands.CheckAnyFailure):
             return await ctx.send(embed=discord.Embed(title="⛔ Доступ ограничен", description="Команда доступна только для VIP-пользователей", colour=get_discord_color('error')))
+        if isinstance(error, commands.CommandOnCooldown):
+            return await ctx.send(embed=get_error_embed(desc="Слишком частый вызов команды, попробуйте позже"))
         logger.exception(error)
         await ctx.send(embed=get_error_embed(desc="Не удалось получить фото"))
 

@@ -31,6 +31,8 @@ class WeatherCommand(commands.Cog):
     async def info_error(self, context, error):
         if isinstance(error, commands.MissingRequiredArgument):
             return await context.send(embed=get_error_embed(desc="Укажите город"))
+        if isinstance(error, commands.CommandOnCooldown):
+            return await ctx.send(embed=get_error_embed(desc="Слишком частый вызов команды, попробуйте позже"))
         logger.exception(error)
         await context.send(embed=get_error_embed(desc="Не удалось получить погоду"))
 

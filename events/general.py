@@ -9,8 +9,6 @@ class GeneralEvents(commands.Cog):
     async def on_command_error(self, ctx, error):
         if isinstance(error, commands.CommandNotFound):
             pass
-        if isinstance(error, commands.CommandOnCooldown):
-            return await ctx.send(embed=get_error_embed(desc="Слишком частый вызов команды, попробуйте позже"))
 
 def setup(bot):
     bot.add_cog(GeneralEvents(bot))
