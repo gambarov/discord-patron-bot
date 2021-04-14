@@ -1,6 +1,8 @@
 import os
 import logging
 import logging.config
+import discord
+from discord.activity import Game
 from discord.ext.commands import Bot
 from utils import files
 from config import options, PRIVATE
@@ -25,6 +27,7 @@ if __name__ == "__main__":
 
     bot.load_extension('commands.market.command')
     bot.load_extension('commands.tictactoe.command')
+    bot.load_extension('commands.chat.command')
 
 
 @bot.event
