@@ -1,4 +1,4 @@
-import os, logging
+import os, logging, asyncio, discord
 from difflib import SequenceMatcher
 
 logger = logging.getLogger(__name__)
@@ -18,7 +18,7 @@ class ChatDatabaseManager:
             logger.exception(e)
 
 
-    def find(self, text: str, min_ratio: float = 0.65):
+    async def find(self, text: str, min_ratio: float = 0.65):
         if not self.data:
             logger.warn("Can't find answer cause data is None!")
             return None
@@ -26,11 +26,14 @@ class ChatDatabaseManager:
         answers = []
         text = text.lower()
 
+        loop = asyncio.get_event_loop()
+
         for line in self.data:
             q = self.get(line, 'q')
             if not q: 
                 continue
-            ratio = SequenceMatcher(None, text, q.lower()).ratio()
+            
+            ratio = await loop.run_in_executor(None, SequenceMatcher(None, text, q.lower()).ratio)
             if ratio >= min_ratio:
                 answers.append({ 'q':q, 'text':self.get(line, 'answer'), 'ratio':ratio })
 
