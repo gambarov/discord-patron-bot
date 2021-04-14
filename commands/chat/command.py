@@ -14,7 +14,7 @@ class ChatCommand(commands.Cog):
             return
 
         async with message.channel.typing(): 
-            answers = await self.manager.find(message.content, 0.75)
+            answers = self.manager.find(message.content, 0.75)
             if not answers:
                 return
             answer = random.choice(answers)['text']
