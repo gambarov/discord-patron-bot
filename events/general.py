@@ -16,10 +16,13 @@ class GeneralEvents(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        if isinstance(message.channel, discord.TextChannel):
-            if random.randrange(0, 100) <= 10 or self.bot.user.mentioned_in(message):
-                command = self.bot.get_cog('ChatCommand')
-                return await command.execute(message)
+        if message.author == self.bot.user:
+            return
+
+        if not message.content.startswith(self.bot.command_prefix):
+            command = self.bot.get_cog('ChatCommand')
+            return await command.execute(message)
+                
 
 def setup(bot):
     bot.add_cog(GeneralEvents(bot))
