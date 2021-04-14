@@ -19,7 +19,7 @@ class ChatCommand(commands.Cog):
         answer = random.choice(answers)['text']
             
         async with message.channel.typing():
-            asyncio.sleep(1)
+            await asyncio.sleep(1)
             if isinstance(message.channel, discord.TextChannel):
                 await message.reply(answer)
             else:
