@@ -9,9 +9,10 @@ class ChatCommand(commands.Cog):
 
     async def execute(self, message):
         answers = self.manager.find(message.content, 0.75)
+        if not answers:
+            return
         answer = random.choice(answers)
-        if answer:
-            await message.channel.send(answer['text'])
+        await message.reply(answer['text'])
 
 def setup(bot):
     bot.add_cog(ChatCommand(bot))
