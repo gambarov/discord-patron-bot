@@ -1,6 +1,6 @@
 import random
 
-import discord
+import discord, asyncio 
 from commands.chat.manager import ChatDatabaseManager
 from discord.ext import commands
 
@@ -13,12 +13,13 @@ class ChatCommand(commands.Cog):
         if not self.should(message):
             return
 
-        async with message.channel.typing(): 
-            answers = self.manager.find(message.content, 0.75)
-            if not answers:
-                return
-            answer = random.choice(answers)['text']
+        answers = self.manager.find(message.content, 0.7)
+        if not answers:
+            return
+        answer = random.choice(answers)['text']
             
+        async with message.channel.typing():
+            asyncio.sleep(1)
             if isinstance(message.channel, discord.TextChannel):
                 await message.reply(answer)
             else:
