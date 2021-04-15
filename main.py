@@ -23,11 +23,11 @@ if __name__ == "__main__":
     logging.config.fileConfig('logs/config.cfg')
 
     load_extensions('commands')
-    load_extensions('events')
-
     bot.load_extension('commands.market.command')
     bot.load_extension('commands.tictactoe.command')
-    bot.load_extension('commands.chat.command')
+
+    load_extensions('events')
+    bot.load_extension('events.chat.event')
 
 
 @bot.event

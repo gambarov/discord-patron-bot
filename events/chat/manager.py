@@ -1,4 +1,4 @@
-import os, logging
+import os, logging, random
 from difflib import SequenceMatcher
 
 logger = logging.getLogger(__name__)
@@ -34,6 +34,14 @@ class ChatDatabaseManager:
             ratio = SequenceMatcher(None, text, q.lower()).ratio()
             if ratio >= min_ratio:
                 answers.append({ 'q':q, 'text':self.get(line, 'answer'), 'ratio':ratio })
+
+        if not answers:
+            line = random.choice(self.data)
+            return [{   
+                    'q':self.get(line, 'q'), 
+                    'text':self.get(line, 'answer'), 
+                    'ratio':0 
+                }]
 
         return answers
 

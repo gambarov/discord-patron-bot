@@ -8,6 +8,9 @@ def is_cartel(ctx):
         return False
     return ctx.channel.category.id == 816337597113958411
 
+def is_test_channel(channel):
+    return channel.id == 823542321328947232
+
 # TODO:
 def is_vip_user():
     async def predicate(ctx):
