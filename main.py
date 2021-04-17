@@ -1,8 +1,4 @@
-import os
-import logging
-import logging.config
-import discord
-from discord.activity import Game
+import os, logging, logging.config
 from discord.ext.commands import Bot
 from utils import files
 from config import options, PRIVATE

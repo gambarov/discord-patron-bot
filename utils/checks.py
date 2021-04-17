@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-class PremiumRequired(commands.CheckFailure):
+class PremiumRequired(commands.CommandError):
     pass
 
 def is_cartel(ctx):

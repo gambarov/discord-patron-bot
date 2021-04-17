@@ -23,7 +23,7 @@ class EroCommand(commands.Cog):
         self.client = aiohttp.ClientSession()
 
     @commands.command(name="ero", help="some ero")
-    @commands.check_any(commands.is_owner(), is_vip_user())
+    @commands.check_any(is_vip_user())
     @commands.cooldown(rate=1, per=3, type=commands.BucketType.channel)
     async def execute(self, ctx, *, tag=''):
         async with ctx.typing():
