@@ -10,6 +10,7 @@ class CleanupCommand(commands.Cog):
 
     @commands.command(name = "очистка", help = "удаление сообщений, связанных с командами бота")
     @commands.cooldown(rate=1, per=3, type=commands.BucketType.channel)
+    @commands.check_any(commands.guild_only())
     async def execute(self, context, limit=10):
         limit = min(limit, 100)
         channel = context.message.channel
@@ -27,7 +28,7 @@ class CleanupCommand(commands.Cog):
 
     @execute.error
     async def on_error(self, ctx, error):
-        if (isinstance(error.original, AttributeError)):
+        if (isinstance(error, commands.NoPrivateMessage)):
             return await ctx.send(embed = utils.helper.get_error_embed(desc = "Команда предназначена только для серверов"))
         logger.exception(error)
 
