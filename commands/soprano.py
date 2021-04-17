@@ -1,6 +1,6 @@
 import discord, random, logging
 from discord.ext import commands
-from utils.helper import get_discord_color, get_error_embed
+from utils.helper import get_discord_color
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +58,6 @@ class SopranoCommand(commands.Cog):
 
     async def cog_command_error(self, ctx, error):
         logger.exception(error)
-        await ctx.send(embed = get_error_embed("Неизвестная ошибка!"))
 
     def possibly(self):
         return random.randrange(1, 100) <= 17

@@ -41,7 +41,6 @@ class ConvertCommand(commands.Cog):
         if isinstance(error, commands.BadArgument):
             return await ctx.send(embed = get_error_embed(desc = "Некорректный ввод"))
         logger.exception(error)
-        await ctx.send(embed = get_error_embed("Неизвестная ошибка"))
 
 def setup(bot):
     bot.add_cog(ConvertCommand(bot))

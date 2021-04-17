@@ -52,7 +52,6 @@ class InfoCommand(commands.Cog):
 
     async def cog_command_error(self, ctx, error):
         logger.exception(error)
-        await ctx.send(embed = get_error_embed(desc = "Не удалось получить информацию"))
 
     def add_member_info(self, member, embed):
         if not isinstance(member, discord.Member):

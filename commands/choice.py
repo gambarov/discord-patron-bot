@@ -1,5 +1,4 @@
 import random
-from utils.helper import get_error_embed
 
 from discord.ext import commands
 
@@ -18,8 +17,6 @@ class ChoiceCommand(commands.Cog):
     async def info_error(self, context, error):
         if isinstance(error, commands.MissingRequiredArgument):
             return await context.send("Введите варианты через 'или'")
-        print(error)
-        await context.send(embed = get_error_embed(desc = "Не удалось выбрать вариант"))
 
 def setup(bot):
     bot.add_cog(ChoiceCommand(bot))

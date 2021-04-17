@@ -47,7 +47,6 @@ class ExchangeCommand(commands.Cog):
         if isinstance(error, commands.MissingRequiredArgument):
             return await ctx.send(embed = get_error_embed(desc = "Укажите аргумент"))
         logger.exception(error)
-        await ctx.send(embed = get_error_embed(desc = "Неизвестная ошибка"))
 
 def setup(bot):
     bot.add_cog(ExchangeCommand(bot))

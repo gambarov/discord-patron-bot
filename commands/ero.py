@@ -11,7 +11,7 @@ import random
 from bs4 import BeautifulSoup
 
 from utils.checks import is_vip_user
-from utils.helper import get_discord_color, get_error_embed
+from utils.helper import get_error_embed
 
 logger = logging.getLogger(__name__)
 
@@ -39,12 +39,7 @@ class EroCommand(commands.Cog):
         if isinstance(error, commands.CommandInvokeError):
             if isinstance(error.original, AttributeError):
                 return await ctx.send(embed=get_error_embed(desc="Такого раздела не существует"))
-        if isinstance(error, commands.CheckAnyFailure):
-            return await ctx.send(embed=discord.Embed(title="⛔ Доступ ограничен", description="Команда доступна только для VIP-пользователей", colour=get_discord_color('error')))
-        if isinstance(error, commands.CommandOnCooldown):
-            return await ctx.send(embed=get_error_embed(desc="Слишком частый вызов команды, попробуйте позже"))
         logger.exception(error)
-        await ctx.send(embed=get_error_embed(desc="Не удалось получить фото"))
 
     async def parse_random_image_id(self, tag):
         page = random.choice(range(1, await self.parse_max_page(tag) + 1))

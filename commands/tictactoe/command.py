@@ -96,7 +96,6 @@ class TicTacToe(commands.Cog):
         if isinstance(error, commands.CheckAnyFailure):
             return await ctx.send(embed=get_error_embed(desc="Команда доступна только на серверах"))
         logger.exception(error)
-        await ctx.send(embed=get_error_embed(desc="Неизвестная ошибка!"))
 
 
 def setup(bot):

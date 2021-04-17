@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+from utils import checks, helper
 
 class GeneralEvents(commands.Cog):
     def __init__(self, bot):
@@ -13,7 +14,11 @@ class GeneralEvents(commands.Cog):
     async def on_command_error(self, ctx, error):
         if isinstance(error, commands.CommandNotFound):
             pass
-                
+        if isinstance(error, checks.PremiumRequired):
+            return await ctx.send(embed=discord.Embed(title="⛔ Доступ ограничен", description="Команда доступна только для VIP-пользователей", colour=discord.Color.red))
+        if isinstance(error, commands.CommandOnCooldown):
+            return await ctx.send(embed=helper.get_error_embed(desc="Слишком частый вызов команды, попробуйте позже"))
+        raise error
 
 def setup(bot):
     bot.add_cog(GeneralEvents(bot))

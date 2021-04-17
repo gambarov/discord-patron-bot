@@ -28,13 +28,10 @@ class WeatherCommand(commands.Cog):
                 await context.send(embed=self.parse_to_embed(data))
 
     @execute.error
-    async def info_error(self, context, error):
+    async def info_error(self, ctx, error):
         if isinstance(error, commands.MissingRequiredArgument):
-            return await context.send(embed=get_error_embed(desc="Укажите город"))
-        if isinstance(error, commands.CommandOnCooldown):
-            return await ctx.send(embed=get_error_embed(desc="Слишком частый вызов команды, попробуйте позже"))
+            return await ctx.send(embed=get_error_embed(desc="Укажите город"))
         logger.exception(error)
-        await context.send(embed=get_error_embed(desc="Не удалось получить погоду"))
 
     def parse_to_embed(self, data):
         if (not 'location' in data) or (len(data['current']) == 0):

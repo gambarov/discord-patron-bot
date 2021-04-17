@@ -1,4 +1,3 @@
-from utils.helper import get_error_embed
 import aiohttp
 import json
 
@@ -42,7 +41,6 @@ class CourseCommand(commands.Cog):
 
     async def cog_command_error(self, ctx, error):
         logger.exception(error)
-        await ctx.send(embed = get_error_embed(desc = "Не удалось получить данные"))
 
     @staticmethod
     async def get_courses():

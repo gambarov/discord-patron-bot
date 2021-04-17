@@ -1,6 +1,9 @@
 import discord
 from discord.ext import commands
 
+class PremiumRequired(commands.CheckFailure):
+    pass
+
 def is_cartel(ctx):
     if not isinstance(ctx.channel, discord.TextChannel):
         return False
@@ -14,5 +17,7 @@ def is_test_channel(channel):
 # TODO:
 def is_vip_user():
     async def predicate(ctx):
-        return is_cartel(ctx)
+        if not is_cartel(ctx) or not ctx.author.id == 627833817708625931:
+            raise PremiumRequired
+        return True
     return commands.check(predicate)
