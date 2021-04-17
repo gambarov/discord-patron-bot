@@ -39,10 +39,9 @@ class InfoCommand(commands.Cog):
         await ctx.send(embed = embed)
 
     @execute.command(name = "сервер", help = "информация о сервере")
+    @commands.guild_only()
     async def guild(self, ctx):
         guild = ctx.guild
-        if ctx.guild is None:
-            return await ctx.send(discord.Embed(description = "Вы должны находиться на сервере", colour = get_discord_color('error')))
         embed = discord.Embed(title = guild.name, description = guild.description, colour = get_discord_color('info'))
         embed.add_field(name = "Owner:", value = "<@!{}>".format(guild.owner.id))
         embed.add_field(name = "Members:", value = int(guild.member_count))
@@ -50,9 +49,19 @@ class InfoCommand(commands.Cog):
         embed.set_footer(text = "ID: {}".format(guild.id))
         return await ctx.send(embed = embed)
 
-    async def cog_command_error(self, ctx, error):
-        logger.exception(error)
+    @execute.command(name = "канал", help = "информация о канале")
+    @commands.guild_only()
+    async def channel(self, ctx):
+        channel = ctx.channel
+        embed = discord.Embed(title = channel.name, colour = get_discord_color('info'))
+        embed.set_footer(text = "ID: {}".format(channel.id))
+        return await ctx.send(embed = embed)
 
+
+    async def cog_command_error(self, ctx, error):
+        if (isinstance(error, commands.NoPrivateMessage)):
+            return await ctx.send(embed = get_error_embed(desc="Для получения информации, нужно находиться на сервере"))
+            
     def add_member_info(self, member, embed):
         if not isinstance(member, discord.Member):
             return embed
