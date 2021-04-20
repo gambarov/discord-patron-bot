@@ -54,6 +54,7 @@ class InfoCommand(commands.Cog):
     async def channel(self, ctx):
         channel = ctx.channel
         embed = discord.Embed(title = channel.name, colour = get_discord_color('info'))
+        embed.add_field(name = "Category ID", value = str(ctx.channel.category.id), inline = False)
         embed.set_footer(text = "ID: {}".format(channel.id))
         return await ctx.send(embed = embed)
 
