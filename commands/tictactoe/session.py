@@ -51,15 +51,16 @@ class GameSession():
     def move_next(self, user: discord.Member):
         # Пытаемся добавить игрока
         player = self.get(user)
+        # Если пытается походить пред игрок
+        if self.previous:
+            if self.previous.user == user:
+                return False
         # Сессия еще не готова, просто добавляем и возвращаем игроков по очереди
         if not self.ready():
             self.previous = player
             return player
         # Иначе в зависимости от пред игрока определяем текущего (если юзер - это существующий игрок)
         elif self.exists(user):
-            # Если пытается походить пред игрок
-            if self.previous.user == user:
-                return False
             current = self.first if self.previous == self.second else self.second
             self.previous = current
             return current

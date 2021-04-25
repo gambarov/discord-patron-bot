@@ -1,7 +1,7 @@
 from discord.ext import commands
 import discord
 import logging
-from utils.helper import get_discord_color, get_error_embed
+import utils.helper as helper
 
 from commands.tictactoe.manager import GameManager
 from commands.tictactoe.grid import GameGrid
@@ -19,7 +19,7 @@ class TicTacToe(commands.Cog):
         grid = GameGrid()
 
         embed = discord.Embed(
-            title="Крестики-нолики", description=str(grid), colour=get_discord_color('info'))
+            title="Крестики-нолики", description=str(grid), colour=helper.get_discord_color('info'))
         embed.set_footer(text="⚙️ Подготовка сессии, подождите...")
 
         message = await ctx.send(embed=embed)
@@ -58,7 +58,7 @@ class TicTacToe(commands.Cog):
         grid.replace(reaction.emoji, player.emoji)
 
         embed = discord.Embed(
-            title="Крестики-нолики", description=str(grid), colour=get_discord_color('info'))
+            title="Крестики-нолики", description=str(grid), colour=helper.get_discord_color('info'))
 
         embed.add_field(name="Игрок №1",
                         value="<@!{}>".format(session.first.user.id))
@@ -69,12 +69,12 @@ class TicTacToe(commands.Cog):
         if winner:
             embed.add_field(name="🏆 Победитель:",
                             value="<@!{}>".format(winner.user.id), inline=False)
-            embed.colour = get_discord_color('success')
+            embed.colour = helper.get_discord_color('success')
             self.manager.delete_session(message.id)
         elif self.manager.check_for_draw(session):
             embed.add_field(name="Игра завершена",
                             value="🍻 Ничья!", inline=False)
-            embed.colour = get_discord_color('warning')
+            embed.colour = helper.get_discord_color('warning')
             self.manager.delete_session(message.id)
         else:
             # Получаем инфу о след игроке
@@ -92,9 +92,9 @@ class TicTacToe(commands.Cog):
 
     async def cog_command_error(self, ctx, error):
         if isinstance(error, commands.BadArgument):
-            return await ctx.send(embed=get_error_embed(desc="Размер поля должен быть целым числом"))
+            return await ctx.send(embed=helper.get_error_embed(desc="Размер поля должен быть целым числом"))
         if isinstance(error, commands.CheckAnyFailure):
-            return await ctx.send(embed=get_error_embed(desc="Команда доступна только на серверах"))
+            return await ctx.send(embed=helper.get_error_embed(desc="Команда доступна только на серверах"))
         logger.exception(error)
 
 
