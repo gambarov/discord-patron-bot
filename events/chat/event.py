@@ -11,13 +11,14 @@ class ChatEvent(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.manager = ChatDatabaseManager()
+        self.reply_chance = 1
 
     @commands.Cog.listener()
     async def on_message(self, message):
         if not self.should(message):
             return
 
-        answers = self.manager.find(message.content, 0.7)
+        answers = self.manager.find(message.content, 0.6)
         if not answers:
             return
         answer = random.choice(answers)['text']
@@ -34,8 +35,8 @@ class ChatEvent(commands.Cog):
             return False
         if PRIVATE:
             return is_test_channel(message.channel)
-        else:
-            return (random.randrange(0, 100) <= 3 or self.bot.user.mentioned_in(message) or isinstance(message.channel, discord.DMChannel)) and not message.content.startswith(self.bot.command_prefix)
+        if not message.content.startswith(self.bot.command_prefix):
+            return (random.randint(1, 100) <= self.reply_chance or self.bot.user.mentioned_in(message) or isinstance(message.channel, discord.DMChannel))
 
 
 def setup(bot):
