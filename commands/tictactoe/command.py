@@ -10,12 +10,14 @@ from discord.ext import commands
 
 logger = logging.getLogger(__name__)
 
-emojis = [ '❌', '⭕' ]
+emojis = ['❌', '⭕']
+
 
 class TicTacToe(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.manager = games.GameManager([ 'playing', 'draw', 'won' ])
+        self.manager = games.GameManager(
+            ['preparing', 'playing', 'draw', 'won'])
 
     @commands.command(name="тик", help="крестики-нолики!")
     @commands.check_any(commands.guild_only())
@@ -50,32 +52,50 @@ class TicTacToe(commands.Cog):
             return
 
         state = await self.process_game(session=session, user=user, emoji=reaction.emoji)
+        grid = session.options['grid']
 
-        embed = discord.Embed(title="Крестики-нолики", description=str(session.options['grid']), colour=helper.get_discord_color('info'))
+        embed = discord.Embed(
+            title="Крестики-нолики", description=str(grid), colour=helper.get_discord_color('info'))
 
-        def add_embed_pinfo(embed, players):
-            embed.add_field(name="Игрок №1",
-                        value="<@!{}>".format(players[0].user.id))
-            embed.add_field(name="Игрок №2", value="Ожидается" if not session.ready() 
-            else "<@!{}>".format(players[1].user.id))
+        def add_players_info(embed, session: games.GameSession, about_current: bool):
+            players = session.players
+            for index, player in enumerate(players):
+                embed.add_field(name=f"Игрок #{index+1}",
+                                value="<@!{}>".format(player.user.id))
+            if about_current and session.ready():
+                # Получаем инфу о след игроке
+                current = players.current
+                if current:
+                    embed.add_field(name="Текущий ход", value="{} ({})".format(
+                        "<@!{}>".format(current.user.id), current.emoji), inline=False)
             return embed
 
         players = session.players
 
         if state == 'preparing':
-            players.append(games.GamePlayer(user, emojis[len(players)]))
-            embed = add_embed_pinfo(embed, players)
-            if not session.full():
-                embed.set_footer(text="👀 Ожидание игроков...")
+            # Ход только в существующую клетку
+            if not grid.has(reaction.emoji):
+                return
+            # Юзер уже зарегистрирован
+            if players.find(user):
+                return
+            else:
+                # Определяем эмоджи и добавляем игрока
+                player_emoji = emojis[len(players)]
+                players.append(games.GamePlayer(user, player_emoji))
+                # Помечаем на поле
+                grid.replace(reaction.emoji, player_emoji)
+                embed = add_players_info(embed, session, False)
+                embed.description = str(grid)
+                if not session.full():
+                    embed.set_footer(text="👀 Ожидание игроков...")
+                await message.clear_reaction(reaction.emoji)
         elif state == 'playing':
-            # Получаем инфу о след игроке
-            pnext = players.current
-            if pnext:
-                embed.add_field(name="Текущий ход", value="{} ({})".format(
-                    "<@!{}>".format(pnext.user.id), pnext.emoji), inline=False)
+            embed = add_players_info(embed, session, True)
         else:
             # Партия закончена, можно очищать
             self.manager.remove_session(message.id)
+            embed = add_players_info(embed, session, False)
             if state == 'won':
                 winner = players.winners[0]
                 embed.add_field(name="🏆 Победитель:", value="<@!{}>".format(winner.user.id), inline=False)
@@ -83,12 +103,15 @@ class TicTacToe(commands.Cog):
             elif state == 'draw':
                 embed.add_field(name="Игра завершена", value="🍻 Ничья!", inline=False)
                 embed.colour = helper.get_discord_color('warning')
-
         await message.edit(embed=embed)
 
     @games.handler
     async def process_game(self, **kwargs):
         session = kwargs.get('session')
+
+        if not session.full():
+            return 'preparing'
+
         user = kwargs.get('user')
         emoji = kwargs.get('emoji')
 
@@ -96,9 +119,8 @@ class TicTacToe(commands.Cog):
         # В клетку уже походили
         if not grid.has(emoji):
             return 'playing'
-        # Получаем текущего игрока
+
         player = session.players.find(user)
-        # Текущий юзер - не (текущий) игрок
         if player:
             logger.info(f"Player '{player.user.name}' wanna make a move")
             if not player == session.players.current:

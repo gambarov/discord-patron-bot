@@ -50,7 +50,7 @@ class GamePlayerList(collections.MutableSequence):
             logger.warn(f"Player '{player.user.name}'' already exists!")
             return
         logger.info(f"Inserting player '{player.user.name}'")
-        self._deque.append(player)
+        self._deque.insert(index, player)
         self._players.insert(index, player)
 
     def full(self) -> bool:

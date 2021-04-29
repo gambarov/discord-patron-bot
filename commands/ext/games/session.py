@@ -12,7 +12,7 @@ class GameSession():
         self.options = options
         self._manager = None
         self._ready = False
-        self._state = 'preparing'
+        self._state = None
 
     @property
     def state(self):
@@ -25,8 +25,9 @@ class GameSession():
             assert(new_state in self.manager.states)
         except:
             logger.error(f"Incorrect state: {new_state} (available states: {str(self.manager.states)})")
-        logger.info(f"Session #{self.message.id}: new state is '{new_state}'")
-        self._state = new_state
+        else:
+            logger.info(f"Session #{self.message.id}: new state is '{new_state}'")
+            self._state = new_state
 
     def launch(self):
         self._ready = True
