@@ -1,4 +1,5 @@
 import collections
+from collections import deque
 import logging
 
 from . import config
@@ -10,6 +11,7 @@ logger = logging.getLogger(__name__)
 class GamePlayerList(collections.MutableSequence):
     def __init__(self, minlen: int, maxlen: int, step: int = 1) -> None:
         self._players = list()
+        self._deque = deque()
         self.winners = list()
         self.minlen = minlen
         self.maxlen = maxlen
@@ -41,26 +43,13 @@ class GamePlayerList(collections.MutableSequence):
         l = len(self._players)
         return l >= self.minlen and l % self._step == 0
 
-    def move_next(self, user: config.UserType):
-        # Сессия еще не готова, просто добавляем и возвращаем игроков по очереди
-        if not self.full:
-            # Пользователь уже зарегистрирован
-            if self.find(user):
-                return None
-            player = self.add(user)
-            self.previous = player
-            return player
-        # Если пытается походить пред игрок
-        if self.previous:
-            if self.previous.user == user:
-                return False
-        # Пытаемся получить игрока
-        player = self.get(user)
-        # Иначе в зависимости от пред игрока определяем текущего (если юзер - это существующий игрок)
-        if player:
-            current = next(itertools.cycle(self.players))
-            self.previous = current
-            return current
+    def pop(self):
+        if len(self._deque) == 0:
+            logger.info("Deque of players is empty, recreating...")
+            self._deque = deque(self._players)
+        player = self._deque.popleft()
+        logger.info(f"Popping player '{player.user.name}'")
+        return
 
     def __len__(self):
         return len(self._players)
