@@ -1,17 +1,21 @@
-from discord.ext import commands
 import discord
 import logging
+
 import utils.helper as helper
 
-from commands.tictactoe.manager import GameManager
 from commands.tictactoe.grid import GameGrid
+import commands.ext.games.wrapper as games
+
+from discord.ext import commands
 
 logger = logging.getLogger(__name__)
+
+emojis = [ '❌', '⭕' ]
 
 class TicTacToe(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.manager = GameManager()
+        self.manager = games.GameManager([ 'playing', 'draw', 'won' ])
 
     @commands.command(name="тик", help="крестики-нолики!")
     @commands.check_any(commands.guild_only())
@@ -31,64 +35,128 @@ class TicTacToe(commands.Cog):
 
         embed.set_footer(text="👀 Ожидание игроков...")
         await message.edit(embed=embed)
-        self.manager.add_session(message_id=message.id, grid=grid)
+        session = self.manager.add_session(message, 2, 2, 1, grid=grid)
+        # Сразу переводим флаг, т.е. готовность при полном кол-ве игроков
+        session.launch()
 
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction, user):
-        # Игнорируем себя (бота)
         if user == self.bot.user:
             return
         message = reaction.message
-        session = self.manager.sessions.get(message.id, None)
-        # Если сообщение - не сессия игры
+        session = self.manager.get_session(message.id)
+        # Сообщение - не сессия игры
         if not session:
             return
-        grid = session.grid
-        # В клетку уже походили
-        if not grid.has(reaction.emoji):
-            return
-        # Получаем текущего игрока
-        player = session.move_next(user)
-        # Текущий юзер - не (текущий) игрок
-        if not player:
-            return
-        # Убираем кнопку с ячейкой
-        await message.clear_reaction(reaction.emoji)
-        # Помечаем на поле
-        grid.replace(reaction.emoji, player.emoji)
 
-        embed = discord.Embed(
-            title="Крестики-нолики", description=str(grid), colour=helper.get_discord_color('info'))
+        state = await self.process_game(session=session, user=user, emoji=reaction.emoji)
 
-        embed.add_field(name="Игрок №1",
-                        value="<@!{}>".format(session.first.user.id))
-        embed.add_field(name="Игрок №2", value="Ожидается" if not session.ready(
-        ) else "<@!{}>".format(session.second.user.id))
+        embed = discord.Embed(title="Крестики-нолики", description=str(session.options['grid']), colour=helper.get_discord_color('info'))
 
-        winner = self.manager.check_for_winner(session)
-        if winner:
-            embed.add_field(name="🏆 Победитель:",
-                            value="<@!{}>".format(winner.user.id), inline=False)
-            embed.colour = helper.get_discord_color('success')
-            self.manager.delete_session(message.id)
-        elif self.manager.check_for_draw(session):
-            embed.add_field(name="Игра завершена",
-                            value="🍻 Ничья!", inline=False)
-            embed.colour = helper.get_discord_color('warning')
-            self.manager.delete_session(message.id)
-        else:
+        def add_embed_pinfo(embed, players):
+            embed.add_field(name="Игрок №1",
+                        value="<@!{}>".format(players[0].user.id))
+            embed.add_field(name="Игрок №2", value="Ожидается" if not session.ready() 
+            else "<@!{}>".format(players[1].user.id))
+            return embed
+
+        players = session.players
+
+        if state == 'preparing':
+            players.append(games.GamePlayer(user, emojis[len(players)]))
+            embed = add_embed_pinfo(embed, players)
+            if not session.full():
+                embed.set_footer(text="👀 Ожидание игроков...")
+        elif state == 'playing':
             # Получаем инфу о след игроке
-            pnext = session.first if session.previous == session.second else session.second
+            pnext = players.current
             if pnext:
                 embed.add_field(name="Текущий ход", value="{} ({})".format(
                     "<@!{}>".format(pnext.user.id), pnext.emoji), inline=False)
+        else:
+            # Партия закончена, можно очищать
+            self.manager.remove_session(message.id)
+            if state == 'won':
+                winner = players.winners[0]
+                embed.add_field(name="🏆 Победитель:", value="<@!{}>".format(winner.user.id), inline=False)
+                embed.colour = helper.get_discord_color('success')
+            elif state == 'draw':
+                embed.add_field(name="Игра завершена", value="🍻 Ничья!", inline=False)
+                embed.colour = helper.get_discord_color('warning')
+
         await message.edit(embed=embed)
+
+    @games.handler
+    async def process_game(self, **kwargs):
+        session = kwargs.get('session')
+        user = kwargs.get('user')
+        emoji = kwargs.get('emoji')
+
+        grid = session.options['grid']
+        # В клетку уже походили
+        if not grid.has(emoji):
+            return 'playing'
+        # Получаем текущего игрока
+        player = session.players.find(user)
+        # Текущий юзер - не (текущий) игрок
+        if player:
+            logger.info(f"Player '{player.user.name}' wanna make a move")
+            if not player == session.players.current:
+                logger.info("Not a current player, skipping")
+                return 'playing'
+        # Сдвигаем очередь
+        session.players.pop()
+        # Убираем кнопку с ячейкой
+        await session.message.clear_reaction(emoji)
+        # Помечаем на поле
+        grid.replace(emoji, player.emoji)
+        # Игрок сделал выйгрышный ход
+        if self.check_for_winner(session):
+            session.players.set_winner(player)
+            return 'won'
+        # Все поля помечены, ничья
+        elif (grid.move_count == pow(grid.size, 2)):
+            return 'draw'
+        return 'playing'
+
+    def check_for_winner(self, session: games.GameSession):
+        for player in session.players:
+            def check_matrix(matrix):
+                # По горизонтали
+                for x in range(len(matrix)):
+                    for y in range(len(matrix[x])):
+                        if matrix[x][y]['emoji'] != player.emoji:
+                            break
+                        elif y == len(matrix) - 1:
+                            return True
+                # По вертикали
+                for x in range(len(matrix)):
+                    for y in range(len(matrix[x])):
+                        if matrix[y][x]['emoji'] != player.emoji:
+                            break
+                        elif y == len(matrix) - 1:
+                            return True
+                # По главной диагонали
+                for i in range(len(matrix)):
+                    if matrix[i][i]['emoji'] != player.emoji:
+                        break
+                    elif i == len(matrix) - 1:
+                        return True
+                # По обратной диагонали
+                for x in range(len(matrix)):
+                    y = len(matrix)-1-x
+                    if matrix[x][y]['emoji'] != player.emoji:
+                        break
+                    elif x == len(matrix) - 1:
+                        return True
+
+            matrix = session.options['grid'].matrix
+            if check_matrix(matrix):
+                return True
 
     @commands.Cog.listener()
     async def on_message_delete(self, message):
-        session = self.manager.sessions.get(message.id, None)
-        if session:
-            self.manager.delete_session(message.id)
+        self.manager.remove_session(message.id)
 
     async def cog_command_error(self, ctx, error):
         if isinstance(error, commands.BadArgument):
