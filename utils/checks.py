@@ -17,7 +17,7 @@ def is_test_channel(channel):
 # TODO:
 def is_vip_user():
     async def predicate(ctx):
-        if (not is_cartel(ctx.channel)) or (not ctx.author.id == 627833817708625931):
+        if not is_cartel(ctx.channel) and not ctx.author.id == 627833817708625931:
             raise PremiumRequired
         return True
     return commands.check(predicate)
