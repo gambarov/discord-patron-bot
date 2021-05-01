@@ -14,7 +14,7 @@ class WhoCommand(commands.Cog):
         members = [ member for member in members if not member.bot ]
         member = random.choice(members)
         texts = [ "Бля буду,", "По-любому", "Очевидно, что", "Скорее всего," ]
-        await context.send('{} {} {}'.format(random.choice(texts), member.name, phrase))
+        await context.send('{} {} {}'.format(random.choice(texts), member.display_name, phrase))
 
 def setup(bot):
     bot.add_cog(WhoCommand(bot))

@@ -150,27 +150,27 @@ class TicTacToe(commands.Cog):
                         if matrix[x][y]['emoji'] != player.emoji:
                             break
                         elif y == len(matrix) - 1:
-                            return True
+                            return player
                 # По вертикали
                 for x in range(len(matrix)):
                     for y in range(len(matrix[x])):
                         if matrix[y][x]['emoji'] != player.emoji:
                             break
                         elif y == len(matrix) - 1:
-                            return True
+                            return player
                 # По главной диагонали
                 for i in range(len(matrix)):
                     if matrix[i][i]['emoji'] != player.emoji:
                         break
                     elif i == len(matrix) - 1:
-                        return True
+                        return player
                 # По обратной диагонали
                 for x in range(len(matrix)):
                     y = len(matrix)-1-x
                     if matrix[x][y]['emoji'] != player.emoji:
                         break
                     elif x == len(matrix) - 1:
-                        return True
+                        return player
 
             matrix = session.options['grid'].matrix
             if check_matrix(matrix):
