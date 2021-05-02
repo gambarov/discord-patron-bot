@@ -63,14 +63,13 @@ class TicTacToe(commands.Cog):
         def add_players_info(embed, session: games.GameSession, about_current: bool):
             players = session.players
             for index, player in enumerate(players):
-                embed.add_field(name=f"Игрок #{index+1}",
-                                value="<@!{}>".format(player.user.id))
+                embed.add_field(name=f"Игрок #{index+1}", value=player.mention)
             if about_current and session.ready():
                 # Получаем инфу о след игроке
                 current = players.current
                 if current:
                     embed.add_field(name="Текущий ход", value="{} ({})".format(
-                        "<@!{}>".format(current.user.id), current.emoji), inline=False)
+                        current.mention, current.emoji), inline=False)
             return embed
 
         players = session.players
@@ -88,7 +87,7 @@ class TicTacToe(commands.Cog):
             if state == 'won':
                 winner = players.winners[0]
                 embed.add_field(
-                    name="🏆 Победитель:", value="<@!{}>".format(winner.user.id), inline=False)
+                    name="🏆 Победитель:", value=winner.mention, inline=False)
                 embed.colour = helper.get_discord_color('success')
             elif state == 'draw':
                 embed.add_field(name="Игра завершена",
@@ -113,7 +112,7 @@ class TicTacToe(commands.Cog):
         # Подготовка сессии
         if not session.full():
             state = 'preparing'
-            players.append(games.GamePlayer(user, emojis[len(players)]))
+            players.append(games.GamePlayer(user, emoji=emojis[len(players)]))
             # Сессия заполнена
             if session.full():
                 state = 'playing'

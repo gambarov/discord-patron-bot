@@ -20,7 +20,6 @@ class GamePlayerList(collections.MutableSequence):
     def set_winner(self, winner: GamePlayer) -> None:
         for player in self._players:
             if player == winner:
-                logger.info(f"Appending player '{player.user.name}' to winners")
                 return self.winners.append(player)
 
     def find(self, user: config.UserType) -> GamePlayer:
@@ -37,29 +36,19 @@ class GamePlayerList(collections.MutableSequence):
     @property
     def current(self):
         if self.deque:
-            player = self.deque[0]
-            logger.info(f"Current player is '{player.user.name}'")
-            return player
-        logger.info(f"Current player is None")
+            return self.deque[0]
 
     def insert(self, index, player: GamePlayer) -> None:
-        if self.full():
-            logger.warn("Can't add user to session: limit is exceeded!")
+        if self.full() or self.find(player.user):
             return
-        if self.find(player.user):
-            logger.warn(f"Player '{player.user.name}'' already exists!")
-            return
-        logger.info(f"Inserting player '{player.user.name}'")
         self._deque.insert(index, player)
         self._players.insert(index, player)
 
     def pop(self) -> GamePlayer:
+        # no players in self._players
         if not self.deque:
-            logger.warn("Can't pop: deque of players is empty because there are no players")
             return None
-        player = self.deque.popleft()
-        logger.info(f"Popping player '{player.user.name}'")
-        return player
+        return self._deque.popleft()
 
     def full(self) -> bool:
         return len(self._players) >= self.maxlen
@@ -83,9 +72,9 @@ class GamePlayerList(collections.MutableSequence):
     def __iter__(self):
         yield from self._players
 
-    def __contains__(self, user: config.UserType):
-        for player in self._players:
-            if player.user == user:
+    def __contains__(self, player: GamePlayer):
+        for p in self._players:
+            if p == player:
                 return True
 
     def __str__(self) -> str:
