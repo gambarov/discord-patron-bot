@@ -5,9 +5,9 @@ from .session import GameSession
 logger = logging.getLogger(__name__)
 
 class GameManager():
-    def __init__(self, *states) -> None:
+    def __init__(self, **kwargs) -> None:
         self.sessions = {}
-        self.states = list(*states)
+        self.states = list(kwargs.get('states'))
 
     def add_session(self, message, min_players, max_players, step_players, **options) -> GameSession:
         session = GameSession(self, message, min_players, max_players, step_players, **options)

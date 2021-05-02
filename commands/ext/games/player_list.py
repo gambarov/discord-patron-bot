@@ -72,9 +72,9 @@ class GamePlayerList(collections.MutableSequence):
     def __iter__(self):
         yield from self._players
 
-    def __contains__(self, player: GamePlayer):
-        for p in self._players:
-            if p == player:
+    def __contains__(self, x: object) -> bool:
+        for player in self._players:
+            if player == x:
                 return True
 
     def __str__(self) -> str:

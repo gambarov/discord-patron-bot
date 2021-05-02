@@ -13,8 +13,17 @@ class GamePlayer():
         return self.user.display_name
 
     @property
+    def full_name(self):
+        return f"{self.user.name}#{self.user.discriminator}"
+
+    @property
     def mention(self):
         return "<@!{}>".format(self.user.id)
 
     def __str__(self) -> str:
-        return "{}#{} (ID{})".format(self.user.name, self.user.discriminator, str(self.user.id))
+        return "{} (ID{})".format(self.full_name, str(self.user.id))
+
+    def __eq__(self, other) -> bool:
+        if isinstance(other, GamePlayer):
+            return self.user == other.user
+        return self.user == other

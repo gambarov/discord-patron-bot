@@ -16,8 +16,7 @@ emojis = ['❌', '⭕']
 class TicTacToe(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.manager = games.GameManager(
-            ['ignore', 'preparing', 'playing', 'draw', 'won'])
+        self.manager = games.GameManager(states=['ignore', 'preparing', 'playing', 'draw', 'won'])
 
     @commands.command(name="тик", help="крестики-нолики!")
     @commands.check_any(commands.guild_only())
