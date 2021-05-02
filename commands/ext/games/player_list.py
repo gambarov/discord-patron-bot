@@ -29,15 +29,15 @@ class GamePlayerList(collections.MutableSequence):
                 return player
 
     @property
-    def _current_deque(self):
+    def deque(self):
         if not self._deque:
             self._deque = deque(self._players)
         return self._deque
 
     @property
     def current(self):
-        if self._current_deque:
-            player = self._current_deque[0]
+        if self.deque:
+            player = self.deque[0]
             logger.info(f"Current player is '{player.user.name}'")
             return player
         logger.info(f"Current player is None")
@@ -53,20 +53,20 @@ class GamePlayerList(collections.MutableSequence):
         self._deque.insert(index, player)
         self._players.insert(index, player)
 
+    def pop(self) -> GamePlayer:
+        if not self.deque:
+            logger.warn("Can't pop: deque of players is empty because there are no players")
+            return None
+        player = self.deque.popleft()
+        logger.info(f"Popping player '{player.user.name}'")
+        return player
+
     def full(self) -> bool:
         return len(self._players) >= self.maxlen
 
     def ready(self) -> bool:
         l = len(self._players)
         return l >= self.minlen and l % self.step == 0
-
-    def pop(self) -> GamePlayer:
-        if not self._current_deque:
-            logger.info("Can't pop: deque of players is empty because there are no players")
-            return None
-        player = self._current_deque.popleft()
-        logger.info(f"Popping player '{player.user.name}'")
-        return player
 
     def __len__(self):
         return len(self._players)

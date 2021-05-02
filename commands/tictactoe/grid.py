@@ -1,4 +1,4 @@
-num_emojis = { '1':'1️⃣', '2':'2️⃣', '3':'3️⃣', '4':'4️⃣', '5':'5️⃣', '6':'6️⃣', '7':'7️⃣', '8':'8️⃣', '9':'9️⃣' }
+cells_emoji = { '1':'1️⃣', '2':'2️⃣', '3':'3️⃣', '4':'4️⃣', '5':'5️⃣', '6':'6️⃣', '7':'7️⃣', '8':'8️⃣', '9':'9️⃣' }
 
 
 class GameGrid():
@@ -9,7 +9,7 @@ class GameGrid():
         index = 1
         for i in range(len(self.matrix)):
             for j in range(len(self.matrix[i])):
-                self.matrix[i][j] = { 'emoji':num_emojis[str(index)] }
+                self.matrix[i][j] = { 'emoji':cells_emoji[str(index)] }
                 index += 1
 
     def __str__(self):
@@ -26,12 +26,12 @@ class GameGrid():
                 if self.matrix[i][j]['emoji'] == emoji:
                     return True
 
-    def replace(self, num_emoji, player_emoji):
+    def replace(self, cell_emoji, player_emoji):
         index = 1
         for i in range(len(self.matrix)):
             for j in range(len(self.matrix[i])):
                 emoji = self.matrix[i][j]['emoji']
-                if emoji == num_emoji:
+                if emoji == cell_emoji:
                     self.matrix[i][j] = { 'emoji':player_emoji }
                     self.move_count += 1
                     return True

@@ -4,7 +4,7 @@ import logging
 import utils.helper as helper
 
 from commands.tictactoe.grid import GameGrid
-import commands.ext.games.wrapper as games
+import commands.ext.games as games
 
 from discord.ext import commands
 
@@ -17,7 +17,7 @@ class TicTacToe(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.manager = games.GameManager(
-            ['preparing', 'playing', 'draw', 'won'])
+            ['ignore', 'preparing', 'playing', 'draw', 'won'])
 
     @commands.command(name="тик", help="крестики-нолики!")
     @commands.check_any(commands.guild_only())
@@ -52,7 +52,10 @@ class TicTacToe(commands.Cog):
             return
 
         state = await self.process_game(session=session, user=user, emoji=reaction.emoji)
-        grid = session.options['grid']
+        if state == 'ignore':
+            return
+
+        grid = session.grid
 
         embed = discord.Embed(
             title="Крестики-нолики", description=str(grid), colour=helper.get_discord_color('info'))
@@ -71,75 +74,77 @@ class TicTacToe(commands.Cog):
             return embed
 
         players = session.players
+        embed = add_players_info(
+            embed, session, True if state == 'playing' else False)
 
         if state == 'preparing':
-            # Ход только в существующую клетку
-            if not grid.has(reaction.emoji):
-                return
-            # Юзер уже зарегистрирован
-            if players.find(user):
-                return
-            else:
-                # Определяем эмоджи и добавляем игрока
-                player_emoji = emojis[len(players)]
-                players.append(games.GamePlayer(user, player_emoji))
-                # Помечаем на поле
-                grid.replace(reaction.emoji, player_emoji)
-                embed = add_players_info(embed, session, False)
-                embed.description = str(grid)
-                if not session.full():
-                    embed.set_footer(text="👀 Ожидание игроков...")
-                await message.clear_reaction(reaction.emoji)
+            embed.description = str(grid)
+            embed.set_footer(text="👀 Ожидание игроков...")
         elif state == 'playing':
-            embed = add_players_info(embed, session, True)
+            pass
         else:
             # Партия закончена, можно очищать
             self.manager.remove_session(message.id)
-            embed = add_players_info(embed, session, False)
             if state == 'won':
                 winner = players.winners[0]
-                embed.add_field(name="🏆 Победитель:", value="<@!{}>".format(winner.user.id), inline=False)
+                embed.add_field(
+                    name="🏆 Победитель:", value="<@!{}>".format(winner.user.id), inline=False)
                 embed.colour = helper.get_discord_color('success')
             elif state == 'draw':
-                embed.add_field(name="Игра завершена", value="🍻 Ничья!", inline=False)
+                embed.add_field(name="Игра завершена",
+                                value="🍻 Ничья!", inline=False)
                 embed.colour = helper.get_discord_color('warning')
         await message.edit(embed=embed)
 
     @games.handler
     async def process_game(self, **kwargs):
         session = kwargs.get('session')
-
-        if not session.full():
-            return 'preparing'
-
-        user = kwargs.get('user')
         emoji = kwargs.get('emoji')
+        grid = session.grid
 
-        grid = session.options['grid']
         # В клетку уже походили
         if not grid.has(emoji):
-            return 'playing'
+            return 'ignore'
 
-        player = session.players.find(user)
-        if player:
+        state = 'playing'
+        players = session.players
+        user = kwargs.get('user')
+
+        # Подготовка сессии
+        if not session.full():
+            state = 'preparing'
+            players.append(games.GamePlayer(user, emojis[len(players)]))
+            # Сессия заполнена
+            if session.full():
+                state = 'playing'
+
+        # Ход может сделать только текущий и сущ в сессии игрок
+        player = players.find(user)
+        if not player:
+            logger.info(f"Player doesnt exist, ignoring...")
+            return 'ignore'
+        else:
             logger.info(f"Player '{player.user.name}' wanna make a move")
-            if not player == session.players.current:
-                logger.info("Not a current player, skipping")
-                return 'playing'
-        # Сдвигаем очередь
-        session.players.pop()
+            first_player_abuse = (len(players) == 1 and grid.move_count == 1)
+            if not player == players.current or first_player_abuse:
+                if first_player_abuse:
+                    players.pop()
+                logger.info("Not a current player, ignoring...")
+                return 'ignore'
         # Убираем кнопку с ячейкой
         await session.message.clear_reaction(emoji)
+        # Сдвигаем очередь
+        players.pop()
         # Помечаем на поле
         grid.replace(emoji, player.emoji)
         # Игрок сделал выйгрышный ход
         if self.check_for_winner(session):
-            session.players.set_winner(player)
-            return 'won'
+            players.set_winner(player)
+            state = 'won'
         # Все поля помечены, ничья
         elif (grid.move_count == pow(grid.size, 2)):
-            return 'draw'
-        return 'playing'
+            state = 'draw'
+        return state
 
     def check_for_winner(self, session: games.GameSession):
         for player in session.players:
@@ -172,7 +177,7 @@ class TicTacToe(commands.Cog):
                     elif x == len(matrix) - 1:
                         return player
 
-            matrix = session.options['grid'].matrix
+            matrix = session.grid.matrix
             if check_matrix(matrix):
                 return True
 

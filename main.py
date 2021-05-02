@@ -1,7 +1,7 @@
 import os, logging, logging.config
 from discord.ext.commands import Bot
 from utils import files
-from config import options, PRIVATE
+from config import options, PRIVATE, testers_id
 from dotenv import load_dotenv
 
 
@@ -31,7 +31,7 @@ async def on_message(message):
     if message.author == bot.user or message.author.bot:
         return
     if PRIVATE:
-        if not message.author.id == 627833817708625931:
+        if not message.author.id in testers_id:
             return
     await bot.process_commands(message)
 

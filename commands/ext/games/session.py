@@ -9,7 +9,10 @@ class GameSession():
         self.manager = manager
         self.players = GamePlayerList(min_players, max_players, step_players)
         self.message = message
-        self.options = options
+        
+        for key, value in options.items():
+            setattr(self, key, value)
+
         self._manager = None
         self._ready = False
         self._state = None
