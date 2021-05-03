@@ -31,7 +31,7 @@ class Word():
 
     @property
     def formatted_original(self):
-        return f"```{self.original.upper()}```"
+        return f"```{[' '.join(letter) for letter in self.original]}```".upper()
 
     def __str__(self) -> str:
         return self.original

@@ -1,13 +1,8 @@
-from discord.ext.commands.errors import NoEntryPointError
-from commands.hangman import word
 import discord
 import logging
-
 import utils.helper as helper
-
 import commands.ext.games as games
 import commands.hangman as hangman
-
 from discord.ext import commands
 
 logger = logging.getLogger(__name__)
@@ -24,7 +19,6 @@ class HangmanCommand(commands.Cog):
     async def execute(self, ctx, theme: str):
         theme = theme.capitalize()
         word = hangman.Word(hangman.data.get_random_word(theme))
-        logger.info(f"Hangman word is {str(word)}")
         if not word:
             return await ctx.send(embed=helper.get_error_embed(desc="Данной тематики не существует!"))
 
@@ -40,7 +34,8 @@ class HangmanCommand(commands.Cog):
             title="Виселица", description=description, colour=discord.Color.blue())
         message = await ctx.send(embed=embed)
         await message.add_reaction('🚪')
-        session = self.manager.add_session(message, 2, 4, 1, theme=theme, word=word, errors=0)
+        session = self.manager.add_session(
+            message, 2, 4, 1, theme=theme, word=word, errors=0)
         session.players.append(games.GamePlayer(
             ctx.author, guesses=0))
 
@@ -82,8 +77,10 @@ class HangmanCommand(commands.Cog):
             Матч начался! Чтобы походить, отправьте мне букву
             {hangman.data.hangmans[0]}
             """
-            embed.add_field(name = "Текущий ход", value = players.current.name, inline=False)
-            embed.add_field(name = "Текущее слово", value = session.word.formatted_encrypted, inline=False)
+            embed.add_field(name="Текущий ход",
+                            value=players.current.name, inline=False)
+            embed.add_field(name="Текущее слово",
+                            value=session.word.formatted_encrypted, inline=False)
         embed.description = description
         await message.edit(embed=embed)
 
@@ -106,21 +103,21 @@ class HangmanCommand(commands.Cog):
             return 'launched'
         return 'ignore'
 
-
     @commands.Cog.listener()
     async def on_message(self, message):
         # Пытаемся получить сообщение, на который пришел ответ
-        reply_message = getattr(getattr(message, 'reference', None), 'cached_message', None)
+        reply_message = getattr(
+            getattr(message, 'reference', None), 'cached_message', None)
         if not reply_message:
             return
         session = self.manager.get_session(reply_message.id)
         if not session:
             return
-        
+
         state = await self.process_game_guessing(session=session, user=message.author, letter=message.content)
         if state == 'ignore':
             return
-        
+
         embed = discord.Embed(
             title="Виселица", description="", colour=discord.Color.blue())
         description = ""
@@ -128,11 +125,13 @@ class HangmanCommand(commands.Cog):
         if state == 'guessed' or state == 'wrong':
             action = 'угадывает ✅' if state == 'guessed' else 'ошибается ❌'
             description = f"""
-            {message.author.display_name} выбирает **{message.content.upper()}** и {action}
+            🤔 {message.author.display_name} выбирает **{message.content.upper()}** и {action}
             {hangman.data.hangmans[session.errors]}
             """
-            embed.add_field(name = "Текущий ход", value = session.players.current.name, inline=False)
-            embed.add_field(name = "Текущее слово", value = session.word.formatted_encrypted, inline=False)
+            embed.add_field(name="Текущий ход",
+                            value=session.players.current.name, inline=False)
+            embed.add_field(name="Текущее слово",
+                            value=session.word.formatted_encrypted, inline=False)
         elif state == 'lost' or state == 'won':
             self.manager.remove_session(reply_message.id)
             status = '💀 Игра проиграна' if state == 'lost' else '🏆 Игра выиграна'
@@ -140,15 +139,15 @@ class HangmanCommand(commands.Cog):
             {status}!
             {hangman.data.hangmans[session.errors]}
             """
-            description += "**Счет:**\n"
+            description += "**🏅 Счет:**\n"
             for player in sorted(session.players, key=lambda p: p.guesses, reverse=True):
                 description += f"**{player.name}** - {player.guesses}\n"
-            embed.add_field(name="Слово", value=session.word.formatted_original)
+            embed.add_field(
+                name="Слово", value=session.word.formatted_original)
             embed.colour = discord.Color.red() if state == 'lost' else discord.Color.green()
         embed.description = description
         await reply_message.edit(embed=embed)
         await message.delete(delay=1)
-        
 
     @games.handler
     async def process_game_guessing(self, **kwargs):
@@ -158,10 +157,10 @@ class HangmanCommand(commands.Cog):
         letter = kwargs.get('letter')
 
         if not session.launched or len(letter) != 1:
-            return 'ignore' 
+            return 'ignore'
         if not user == players.current.user:
             return 'ignore'
-        
+
         state = ''
         player = players.current
         word = session.word
@@ -172,7 +171,7 @@ class HangmanCommand(commands.Cog):
             players.pop()
             session.errors += 1
             state = 'wrong'
-        
+
         if session.errors == 6 and not word.completed:
             state = 'lost'
         elif word.completed:
