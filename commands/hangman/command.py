@@ -22,13 +22,9 @@ class HangmanCommand(commands.Cog):
         if not word:
             return await ctx.send(embed=helper.get_error_embed(desc="Данной тематики не существует!"))
 
-        description = f"""
-        Матч по тематике '{theme}'
-
-        ☑️ {ctx.author.display_name}
-
-        Нажмите 🚪, чтобы присоединиться!
-        """
+        description = f"Матч по тематике **{theme}**\n\n"
+        description += f"☑️ {ctx.author.display_name}\n\n"
+        description += "Нажмите 🚪, чтобы присоединиться!"
 
         embed = discord.Embed(
             title="Виселица", description=description, colour=discord.Color.blue())
