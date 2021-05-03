@@ -66,7 +66,7 @@ class HangmanCommand(commands.Cog):
                 description += f"Нажмите 🚪, чтобы присоединиться!\n"
             # Кол-во и четность игроков устраивает
             if players.ready():
-                description += f"{players.name}, для начала игры нажмите ▶️\n"
+                description += f"{players.current.name}, для начала игры нажмите ▶️\n"
                 await message.add_reaction('▶️')
         elif state == 'launched':
             await message.clear_reactions()
