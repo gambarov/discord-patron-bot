@@ -55,7 +55,7 @@ class HangmanCommand(commands.Cog):
         description = ""
 
         if state == 'new_player':
-            description = f"Матч по тематике '{session.theme}'\n\n"
+            description = f"Матч по тематике **{session.theme}**\n\n"
             # Список игроков
             for player in players:
                 description += f"☑️ {player.name}\n"
@@ -132,7 +132,7 @@ class HangmanCommand(commands.Cog):
                             value=session.word.formatted_encrypted, inline=False)
         elif state == 'lost' or state == 'won':
             self.manager.remove_session(reply_message.id)
-            status = '💀 Игра проиграна' if state == 'lost' else '🏆 Игра выиграна'
+            status = '💀 Матч проигран' if state == 'lost' else '🏆 Матч выигран'
             description = f"""
             {status}!
             {hangman.data.hangmans[session.errors]}
