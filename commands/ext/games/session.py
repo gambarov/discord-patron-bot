@@ -11,10 +11,11 @@ class GameSession():
         self.message = message
         
         for key, value in options.items():
+            assert(getattr(self, key, None) is None)
             setattr(self, key, value)
 
         self._manager = None
-        self._ready = False
+        self._launched = False
         self._state = None
 
     @property
@@ -33,10 +34,11 @@ class GameSession():
             self._state = new_state
 
     def launch(self):
-        self._ready = True
+        self._launched = True
 
-    def ready(self):
-        return self._ready and self.players.ready()
+    @property
+    def launched(self):
+        return self._launched and self.players.ready()
 
     def full(self):
         return self.players.full()

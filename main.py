@@ -21,7 +21,8 @@ if __name__ == "__main__":
     load_extensions('commands')
     bot.load_extension('commands.market.command')
     bot.load_extension('commands.tictactoe.command')
-
+    bot.load_extension('commands.hangman.command')
+    
     load_extensions('events')
     bot.load_extension('events.chat.event')
 
