@@ -78,7 +78,7 @@ class HangmanCommand(commands.Cog):
             {hangman.data.hangmans[0]}
             """
             embed.add_field(name="Текущий ход",
-                            value=players.current.name, inline=False)
+                            value=players.current.mention, inline=False)
             embed.add_field(name="Текущее слово",
                             value=session.word.formatted_encrypted, inline=False)
         embed.description = description
@@ -129,7 +129,9 @@ class HangmanCommand(commands.Cog):
             {hangman.data.hangmans[session.errors]}
             """
             embed.add_field(name="Текущий ход",
-                            value=session.players.current.name, inline=False)
+                            value=session.players.current.mention, inline=False)
+            if session.word.used:
+                embed.add_field(name="Уже использовали", value=", ".join(str(letter).upper() for letter in session.word.used))
             embed.add_field(name="Текущее слово",
                             value=session.word.formatted_encrypted, inline=False)
         elif state == 'lost' or state == 'won':
@@ -139,7 +141,7 @@ class HangmanCommand(commands.Cog):
             {status}!
             {hangman.data.hangmans[session.errors]}
             """
-            description += "**🏅 Счет:**\n"
+            description += "**Счет:**\n"
             for player in sorted(session.players, key=lambda p: p.guesses, reverse=True):
                 description += f"**{player.name}** - {player.guesses}\n"
             embed.add_field(

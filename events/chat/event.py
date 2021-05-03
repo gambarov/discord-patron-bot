@@ -4,8 +4,8 @@ import asyncio
 from events.chat.manager import ChatDatabaseManager
 from discord.ext import commands
 
-from utils.checks import is_test_channel
 from config import PRIVATE
+
 
 class ChatEvent(commands.Cog):
     def __init__(self, bot):

@@ -4,6 +4,7 @@ class Word():
     def __init__(self, source: str) -> None:
         self.original = source
         self.encrypted = asterisk * len(source)
+        self.used = set()
 
     def guess(self, letter: str) -> bool:
         letter = letter.lower()
@@ -14,6 +15,7 @@ class Word():
                 new_encrypted += original_letter
             else:
                 new_encrypted += self.encrypted[i]
+        self.used.add(letter)
         guessed = self.encrypted != new_encrypted
         self.encrypted = new_encrypted
         return guessed
@@ -31,7 +33,7 @@ class Word():
 
     @property
     def formatted_original(self):
-        return f"```{[' '.join(letter) for letter in self.original]}```".upper()
+        return f"```{' '.join(self.original.upper())}```".upper()
 
     def __str__(self) -> str:
         return self.original
