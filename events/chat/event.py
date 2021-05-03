@@ -1,10 +1,13 @@
 import random
 import discord
 import asyncio
+import logging
 from events.chat.manager import ChatDatabaseManager
 from discord.ext import commands
 
 from config import PRIVATE
+
+logger = logging.getLogger(__name__)
 
 
 class ChatEvent(commands.Cog):
@@ -36,7 +39,12 @@ class ChatEvent(commands.Cog):
         if PRIVATE:
             return False
         if not message.content.startswith(self.bot.command_prefix):
-            return (random.randint(1, 100) <= self.reply_chance or self.bot.user.mentioned_in(message) or isinstance(message.channel, discord.DMChannel))
+            return (random.randint(1, 100) <= self.reply_chance or isinstance(message.channel, discord.DMChannel))
+
+    async def cog_command_error(self, ctx, error):
+        if isinstance(error, discord.HTTPException):
+            return
+        logger.exception(error)
 
 
 def setup(bot):

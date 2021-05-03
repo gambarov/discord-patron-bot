@@ -1,6 +1,8 @@
 import os
 import json
 import random
+from datetime import datetime
+random.seed(datetime.now())
 
 
 def get_random_word(theme: str):
@@ -17,6 +19,24 @@ def get_random_word(theme: str):
 
 
 hangmans = [
+'''
+```
++---     
+|        
+|        
+|        
+|        
+|        
+=========```''', 
+'''
+```
++---+    
+|        
+|        
+|        
+|        
+|        
+=========```''', 
 '''
 ```
 +---+    

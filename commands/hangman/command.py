@@ -1,3 +1,4 @@
+import asyncio
 import discord
 import logging
 import utils.helper as helper
@@ -65,7 +66,7 @@ class HangmanCommand(commands.Cog):
                 description += f"Нажмите 🚪, чтобы присоединиться!\n"
             # Кол-во и четность игроков устраивает
             if players.ready():
-                description += f"Для начала игры нажмите ▶️\n"
+                description += f"{players.name}, для начала игры нажмите ▶️\n"
                 await message.add_reaction('▶️')
         elif state == 'launched':
             await message.clear_reactions()
@@ -94,7 +95,7 @@ class HangmanCommand(commands.Cog):
                 return 'ignore'
             players.append(games.GamePlayer(user, guesses=0))
             return 'new_player'
-        elif emoji == '▶️' and players.ready():
+        elif emoji == '▶️' and players.ready() and user == players.current.user:
             session.launch()
             return 'launched'
         return 'ignore'
@@ -170,7 +171,7 @@ class HangmanCommand(commands.Cog):
             session.errors += 1
             state = 'wrong'
 
-        if session.errors == 6 and not word.completed:
+        if session.errors == 8 and not word.completed:
             state = 'lost'
         elif word.completed:
             state = 'won'
