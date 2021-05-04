@@ -1,2 +1,2 @@
-from .word import Word
+from .word import HangmanWord
 from . import data

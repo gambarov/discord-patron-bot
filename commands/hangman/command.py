@@ -1,6 +1,6 @@
-import asyncio
 import discord
 import logging
+import random
 import utils.helper as helper
 import commands.ext.games as games
 import commands.hangman as hangman
@@ -14,14 +14,17 @@ class HangmanCommand(commands.Cog):
         self.bot = bot
         self.manager = games.GameManager(
             states=['ignore', 'new_player', 'launched', 'guessed', 'wrong', 'lost', 'won'])
+        self.themes = hangman.data.themes()
 
-    @commands.command(name="виселица", help="виселица!")
     @commands.check_any(commands.guild_only())
+    @commands.command(name = "виселица", help = "торговля на бирже")
     async def execute(self, ctx, theme: str):
+        if theme.lower() == 'темы':
+            return await self.send_themes(ctx)
         theme = theme.capitalize()
-        word = hangman.Word(hangman.data.get_random_word(theme))
-        if not word:
+        if not theme in self.themes:
             return await ctx.send(embed=helper.get_error_embed(desc="Данной тематики не существует!"))
+        word = hangman.HangmanWord(random.choice(self.themes[theme]))
 
         description = f"Матч по тематике **{theme}**\n\n"
         description += f"☑️ {ctx.author.display_name}\n\n"
@@ -36,17 +39,21 @@ class HangmanCommand(commands.Cog):
         session.players.append(games.GamePlayer(
             ctx.author, guesses=0))
 
+    async def send_themes(self, ctx):
+        description = ""
+        for theme, words in self.themes.items():
+            description += f"**{theme}**: {len(words)} слов\n"
+        await ctx.send(embed=discord.Embed(title="📜 Доступные темы",description=description, colour=discord.Color.blue()))
+
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction, user):
         if user == self.bot.user:
             return
-
         message = reaction.message
         session = self.manager.get_session(message.id)
         # Сообщение - не сессия игры
         if not session:
             return
-
         state = await self.process_game_launch(session=session, user=user, emoji=reaction.emoji)
         if state == 'ignore':
             return
@@ -171,7 +178,7 @@ class HangmanCommand(commands.Cog):
             session.errors += 1
             state = 'wrong'
 
-        if session.errors == len(hangman.data.hangmans) and not word.completed:
+        if session.errors == len(hangman.data.hangmans)-1 and not word.completed:
             state = 'lost'
         elif word.completed:
             state = 'won'

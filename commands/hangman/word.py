@@ -1,6 +1,6 @@
 asterisk = '_'
 
-class Word():
+class HangmanWord():
     def __init__(self, source: str) -> None:
         self.original = source
         self.encrypted = asterisk * len(source)
