@@ -12,16 +12,24 @@ class GamePlayerList(collections.MutableSequence):
     def __init__(self, minlen: int, maxlen: int, step: int = 1) -> None:
         self._players = list()
         self._deque = deque()
-        self.winners = list()
         self.minlen = minlen
         self.maxlen = maxlen
         self.step = step
+        self.lost = False
 
     def set_winner(self, winner: GamePlayer) -> None:
+        player = self.find(winner.user)
+        if player and not player.ignored:
+            player.winner = True
+
+    def ignore(self, player: GamePlayer) -> None:
+        player = self.find(player.user)
+        if player:
+            player.ignored = True
         for player in self._players:
-            if player == winner:
-                player.winner = True
-                return self.winners.append(player)
+            if not player.ignored:
+                return
+        self.lost = True
 
     def find(self, user: config.UserType) -> GamePlayer:
         for player in self._players:
@@ -29,7 +37,15 @@ class GamePlayerList(collections.MutableSequence):
                 return player
 
     @property
+    def winners(self) -> list:
+        if self.lost:
+            return list()
+        return [player for player in self._players if player.winner]
+
+    @property
     def deque(self) -> deque:
+        if self.lost:
+            return None
         if not self._deque:
             self._deque = deque(self._players)
         return self._deque
@@ -37,7 +53,9 @@ class GamePlayerList(collections.MutableSequence):
     @property
     def current(self) -> GamePlayer:
         if self.deque:
-            return self.deque[0]
+            for player in self._deque:
+                if not player.ignored:
+                    return player
 
     def insert(self, index, player: GamePlayer) -> None:
         if self.full() or self.find(player.user):
@@ -46,10 +64,13 @@ class GamePlayerList(collections.MutableSequence):
         self._players.insert(index, player)
 
     def pop(self) -> GamePlayer:
-        # no players in self._players
+        # no players in self._players or all players got ignored
         if not self.deque:
             return None
-        return self._deque.popleft()
+        player = self._deque.popleft()
+        if player.ignored:
+            return self.pop()
+        return player
 
     def full(self) -> bool:
         return len(self._players) >= self.maxlen

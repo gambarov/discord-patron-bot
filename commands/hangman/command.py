@@ -13,7 +13,7 @@ class HangmanCommand(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.manager = games.GameManager(
-            states=['ignore', 'new_player', 'launched', 'guessed', 'wrong', 'lost', 'won'])
+            states=['ignore', 'new_player', 'launched', 'guessed', 'wrong', 'wrong_ignore', 'lost', 'won'])
         self.themes = hangman.data.themes()
 
     @commands.check_any(commands.guild_only())
@@ -91,11 +91,12 @@ class HangmanCommand(commands.Cog):
         session = self.manager.get_session(reply_message.id)
         if not session:
             return
-        state = await self.process_game_guessing(session=session, user=message.author, letter=message.content)
+        state = await self.process_game_guessing(session=session, user=message.author, content=message.content)
         if state == 'ignore':
             return
-        if state == 'guessed' or state == 'wrong':
+        if state == 'guessed' or state == 'wrong' or state == 'wrong_ignore':
             action = 'угадывает ✅' if state == 'guessed' else 'ошибается ❌'
+            action = 'выбывает из игры ❌' if state == 'wrong_ignore' else action
             description = f"🤔 {message.author.display_name} выбирает **{message.content.upper()}** и {action}"
             embed = self.get_guessing_embed(description, session)
         elif state == 'lost' or state == 'won':
@@ -110,22 +111,31 @@ class HangmanCommand(commands.Cog):
         user = kwargs.get('user')
         session = kwargs.get('session')
         players = session.players
-        letter = kwargs.get('letter')
+        content = kwargs.get('content')
 
-        if not session.launched or len(letter) != 1:
+        if not session.launched or (len(content) != 1 and len(content) != len(session.word)):
             return 'ignore'
         if not user == players.current.user:
             return 'ignore'
 
         player = players.current
         word = session.word
-        if word.guess(letter):
-            player.guesses += 1
+        guesses = word.guess(content) if len(content) == 1 else word.guess_completely(content)
+        if guesses > 0:
+            player.guesses += guesses
             state = 'guessed'
         else:
             players.pop()
             session.errors += 1
             state = 'wrong'
+            # Игрок пытался отгадать целое слово
+            if len(content) > 1:
+                players.ignore(player)
+                state = 'wrong_ignore'
+            # Если все игроки в игноре, то автолуз
+            if players.lost:
+                state = 'lost'
+                session.errors = len(hangman.data.hangmans)-1
 
         if session.errors == len(hangman.data.hangmans)-1 and not word.completed:
             state = 'lost'
