@@ -1,6 +1,3 @@
-from operator import truediv
-
-
 asterisk = '_'
 
 class HangmanWord():
@@ -24,10 +21,11 @@ class HangmanWord():
         self.encrypted = new_encrypted
         return guesses
 
-    def guess_completely(self, word) -> bool:
-        if word == self.original:
+    def guess_completely(self, word: str) -> bool:
+        if word.lower() == self.original.lower():
+            guesses = sum(1 for a, b in zip(self.encrypted, self.original) if a != b)
             self.encrypted = self.original
-            return len(word)
+            return guesses
         return 0
 
     @property
