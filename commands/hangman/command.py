@@ -17,10 +17,8 @@ class HangmanCommand(commands.Cog):
         self.themes = hangman.data.themes()
 
     @commands.check_any(commands.guild_only())
-    @commands.command(name = "виселица", help = "торговля на бирже")
+    @commands.group(name="виселица", help="игра", invoke_without_command=True)
     async def execute(self, ctx, theme: str):
-        if theme.lower() == 'темы':
-            return await self.send_themes(ctx)
         theme = theme.capitalize()
         if not theme in self.themes:
             return await ctx.send(embed=helper.get_error_embed(desc="Данной тематики не существует!"))
@@ -39,11 +37,12 @@ class HangmanCommand(commands.Cog):
         session.players.append(games.GamePlayer(
             ctx.author, guesses=0))
 
+    @execute.command(name="темы")
     async def send_themes(self, ctx):
         description = ""
         for theme, words in self.themes.items():
             description += f"**{theme}**: {len(words)} слов\n"
-        await ctx.send(embed=discord.Embed(title="📜 Доступные темы",description=description, colour=discord.Color.blue()))
+        await ctx.send(embed=discord.Embed(title="📜 Доступные темы", description=description, colour=discord.Color.blue()))
 
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction, user):
@@ -135,7 +134,8 @@ class HangmanCommand(commands.Cog):
             embed.add_field(name="Текущий ход",
                             value=session.players.current.mention, inline=False)
             if session.word.used:
-                embed.add_field(name="Уже использовали", value=", ".join(str(letter).upper() for letter in session.word.used))
+                embed.add_field(name="Уже использовали", value=", ".join(
+                    str(letter).upper() for letter in session.word.used))
             embed.add_field(name="Текущее слово",
                             value=session.word.formatted_encrypted, inline=False)
         elif state == 'lost' or state == 'won':
