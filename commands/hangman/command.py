@@ -82,7 +82,7 @@ class HangmanCommand(commands.Cog):
             """
             embed.add_field(name="Текущий ход",
                             value=players.current.mention, inline=False)
-            embed.add_field(name="Текущее слово",
+            embed.add_field(name="Слово",
                             value=session.word.formatted_encrypted, inline=False)
         embed.description = description
         await message.edit(embed=embed)
@@ -136,18 +136,19 @@ class HangmanCommand(commands.Cog):
             if session.word.used:
                 embed.add_field(name="Уже использовали", value=", ".join(
                     str(letter).upper() for letter in session.word.used))
-            embed.add_field(name="Текущее слово",
+            embed.add_field(name="Слово",
                             value=session.word.formatted_encrypted, inline=False)
         elif state == 'lost' or state == 'won':
             self.manager.remove_session(reply_message.id)
-            status = '💀 Матч проигран' if state == 'lost' else '🏆 Матч выигран'
+            status = '❌ Матч проигран' if state == 'lost' else '🎉 Матч выигран'
             description = f"""
             {status}!
             {hangman.data.hangmans[session.errors]}
             """
             description += "**Счет:**\n"
             for player in sorted(session.players, key=lambda p: p.guesses, reverse=True):
-                description += f"**{player.name}** - {player.guesses}\n"
+                description += f"**{player.name}** - {player.guesses}"
+                description += " 🏆\n" if player.winner else "\n"
             embed.add_field(
                 name="Слово", value=session.word.formatted_original)
             embed.colour = discord.Color.red() if state == 'lost' else discord.Color.green()
@@ -181,6 +182,7 @@ class HangmanCommand(commands.Cog):
         if session.errors == len(hangman.data.hangmans)-1 and not word.completed:
             state = 'lost'
         elif word.completed:
+            players.set_winner(player)
             state = 'won'
         return state
 

@@ -20,6 +20,7 @@ class GamePlayerList(collections.MutableSequence):
     def set_winner(self, winner: GamePlayer) -> None:
         for player in self._players:
             if player == winner:
+                player.winner = True
                 return self.winners.append(player)
 
     def find(self, user: config.UserType) -> GamePlayer:

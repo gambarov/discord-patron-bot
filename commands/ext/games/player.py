@@ -4,6 +4,7 @@ from . import config
 class GamePlayer():
     def __init__(self, user: config.UserType, **options) -> None:
         self.user = user
+        self.winner = False
         for k, v in options.items():
             assert(getattr(self, k, None) == None)
             setattr(self, k, v)
