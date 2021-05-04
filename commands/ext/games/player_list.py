@@ -29,13 +29,13 @@ class GamePlayerList(collections.MutableSequence):
                 return player
 
     @property
-    def deque(self):
+    def deque(self) -> deque:
         if not self._deque:
             self._deque = deque(self._players)
         return self._deque
 
     @property
-    def current(self):
+    def current(self) -> GamePlayer:
         if self.deque:
             return self.deque[0]
 
@@ -58,16 +58,16 @@ class GamePlayerList(collections.MutableSequence):
         l = len(self._players)
         return l >= self.minlen and l % self.step == 0
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._players)
 
-    def __getitem__(self, key):
+    def __getitem__(self, key) -> GamePlayer:
         return self._players[key]
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key, value) -> None:
         self._players[key] = value
 
-    def __delitem__(self, key):
+    def __delitem__(self, key) -> None:
         del self._players[key]
 
     def __iter__(self):

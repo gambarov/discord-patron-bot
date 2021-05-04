@@ -19,19 +19,17 @@ class SopranoCommand(commands.Cog):
             title="Русская рулетка", description="🎲 Испытай свою удачу!", colour=discord.Color.blue())
         message = await ctx.send(embed=embed)
         await message.add_reaction('🔫')
-        self.manager.add_session(message, 1, 99, 1)
+        self.manager.add_session(games.GameSession(self.manager, message, 1, 99, 1))
 
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction, user):
         if user == self.bot.user or reaction.emoji != '🔫':
             return
-
         message = reaction.message
         session = self.manager.get_session(message.id)
         # Сообщение - не игровая сессия
         if not session:
             return
-
         state = await self.process_game(session=session, user=user)
         if state == 'ignore':
             return
@@ -44,11 +42,9 @@ class SopranoCommand(commands.Cog):
                 embed.add_field(name=player.name,
                                 value="🎉 Выжил", inline=False)
             else:
-                self.manager.remove_session(message.id)
                 embed.add_field(name=player.name,
                                 value="☠️ Застрелился", inline=False)
                 embed.colour = discord.Color.red()
-                embed.set_footer(text="Игра завершена...")
                 await message.clear_reactions()
         await message.edit(embed=embed)
 
@@ -59,6 +55,8 @@ class SopranoCommand(commands.Cog):
         if user in session.players:
             return 'ignore'
         session.players.append(games.GamePlayer(user, dead=self.possibly()))
+        if session.players.current.dead:
+                self.manager.remove_session(session.message.id)
         return 'shot'
 
     @commands.Cog.listener()

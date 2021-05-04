@@ -36,7 +36,7 @@ class TicTacToe(commands.Cog):
 
         embed.set_footer(text="👀 Ожидание игроков...")
         await message.edit(embed=embed)
-        session = self.manager.add_session(message, 2, 2, 1, grid=grid)
+        session = self.manager.add_session(games.GameSession(self.manager, message, 2, 2, 1, grid=grid))
         # Сразу переводим флаг, т.е. готовность при полном кол-ве игроков
         session.launch()
 

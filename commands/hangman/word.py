@@ -26,10 +26,7 @@ class HangmanWord():
 
     @property
     def formatted_encrypted(self):
-        result = ""
-        for letter in self.encrypted:
-            result += letter + ' '
-        return f"```{result.upper()}```"
+        return f"```{' '.join(self.encrypted.upper())}```".upper()
 
     @property
     def formatted_original(self):

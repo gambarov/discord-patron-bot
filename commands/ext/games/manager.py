@@ -9,9 +9,8 @@ class GameManager():
         self.sessions = {}
         self.states = list(kwargs.get('states'))
 
-    def add_session(self, message, min_players, max_players, step_players, **options) -> GameSession:
-        session = GameSession(self, message, min_players, max_players, step_players, **options)
-        self.sessions[message.id] = session
+    def add_session(self, session) -> GameSession:
+        self.sessions[session.message.id] = session
         return session
 
     def get_session(self, message_id) -> GameSession:
