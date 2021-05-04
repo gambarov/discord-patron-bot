@@ -101,6 +101,7 @@ class HangmanCommand(commands.Cog):
             embed = self.get_guessing_embed(description, session)
         elif state == 'lost' or state == 'won':
             description = 'Матч проигран ❌' if state == 'lost' else 'Матч выигран 🎉'
+            description += f"{hangman.data.hangmans[session.errors]}" if state == 'lost' else f"{hangman.data.happy_hangman}"
             embed = self.get_ended_embed(description, session)
             embed.colour = discord.Color.red() if state == 'lost' else discord.Color.green()
         await message.delete()
@@ -176,7 +177,6 @@ class HangmanCommand(commands.Cog):
 
     def get_ended_embed(self, desc, session):
         description = f"{desc}\n"
-        description += f"{hangman.data.hangmans[session.errors]}\n"
         description += "**Счет:**\n"
         for player in sorted(session.players, key=lambda p: p.guesses, reverse=True):
             description += f"**{player.name}** - {player.guesses}"

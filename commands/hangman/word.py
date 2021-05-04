@@ -14,7 +14,7 @@ class HangmanWord():
             original_letter = self.original[i]
             if letter == original_letter.lower():
                 new_encrypted += original_letter
-                guesses += 1
+                guesses = 1
             else:
                 new_encrypted += self.encrypted[i]
         self.used.add(letter)
