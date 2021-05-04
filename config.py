@@ -1,6 +1,6 @@
 import discord
 
-PRIVATE = True
+PRIVATE = False
 
 intents = discord.Intents().all()
 
