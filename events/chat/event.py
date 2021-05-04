@@ -21,13 +21,11 @@ class ChatEvent(commands.Cog):
         if not self.should(message):
             return
 
-        answers = self.manager.find(message.content, 0.6)
-        if not answers:
-            return
-        answer = random.choice(answers)['text']
-
         async with message.channel.typing():
-            await asyncio.sleep(2)
+            answers = await asyncio.get_event_loop().run_in_executor(None, self.manager.find, message.content, 0.6)
+            if not answers:
+                return
+            answer = random.choice(answers)['text']
             if isinstance(message.channel, discord.TextChannel):
                 await message.reply(answer)
             else:

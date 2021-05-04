@@ -171,7 +171,7 @@ class HangmanCommand(commands.Cog):
             session.errors += 1
             state = 'wrong'
 
-        if session.errors == 8 and not word.completed:
+        if session.errors == len(hangman.data.hangmans) and not word.completed:
             state = 'lost'
         elif word.completed:
             state = 'won'
