@@ -33,12 +33,17 @@ class GameSession():
             logger.info(f"Session #{self.message.id}: new state is '{new_state}'")
             self._state = new_state
 
-    def launch(self):
+    def close(self) -> None:
+        self._launched = False
+        self.manager.remove_session(self.message.id)
+
+    def launch(self) -> None:
         self._launched = True
 
     @property
-    def launched(self):
-        return self._launched and self.players.ready()
+    def launched(self) -> bool:
+        return self._launched and self.players.ready
 
-    def full(self):
-        return self.players.full()
+    @property
+    def full(self) -> bool:
+        return self.players.full

@@ -63,7 +63,7 @@ class TicTacToe(commands.Cog):
             players = session.players
             for index, player in enumerate(players):
                 embed.add_field(name=f"Игрок #{index+1}", value=player.mention)
-            if about_current and session.ready():
+            if about_current and session.ready:
                 # Получаем инфу о след игроке
                 current = players.current
                 if current:
@@ -109,11 +109,11 @@ class TicTacToe(commands.Cog):
         user = kwargs.get('user')
 
         # Подготовка сессии
-        if not session.full():
+        if not session.full:
             state = 'preparing'
             players.append(games.GamePlayer(user, emoji=emojis[len(players)]))
             # Сессия заполнена
-            if session.full():
+            if session.full:
                 state = 'playing'
 
         # Ход может сделать только текущий и сущ в сессии игрок

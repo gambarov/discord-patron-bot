@@ -26,7 +26,7 @@ class HangmanCommand(commands.Cog):
         session = games.GameSession(
             self.manager, None, 2, 8, 1, theme=theme, word=word, errors=0)
         session.players.append(games.GamePlayer(ctx.author, guesses=0))
-        session.message = await ctx.send(embed=self.get_launch_embed(session))
+        session.message = await ctx.send(embed=self.launch_embed(session))
         self.manager.add_session(session)
         await session.message.add_reaction('🚪')
 
@@ -53,12 +53,12 @@ class HangmanCommand(commands.Cog):
         players = session.players
 
         if state == 'new_player':
-            embed = self.get_launch_embed(session)
-            if players.ready():
+            embed = self.launch_embed(session)
+            if players.ready:
                 await message.add_reaction('▶️')
         elif state == 'launched':
             await message.clear_reactions()
-            embed = self.get_guessing_embed(
+            embed = self.guessing_embed(
                 "⭐ Матч начался! Чтобы походить, отправьте мне букву", session)
         await message.edit(embed=embed)
 
@@ -76,7 +76,7 @@ class HangmanCommand(commands.Cog):
                 return 'ignore'
             players.append(games.GamePlayer(user, guesses=0))
             return 'new_player'
-        elif emoji == '▶️' and players.ready() and user == players.current.user:
+        elif emoji == '▶️' and players.ready and user == players.current.user:
             session.launch()
             return 'launched'
         return 'ignore'
@@ -98,11 +98,11 @@ class HangmanCommand(commands.Cog):
             action = 'угадывает ✅' if state == 'guessed' else 'ошибается ❌'
             action = 'выбывает из игры ❌' if state == 'wrong_ignore' else action
             description = f"🤔 {message.author.display_name} выбирает **{message.content.upper()}** и {action}"
-            embed = self.get_guessing_embed(description, session)
+            embed = self.guessing_embed(description, session)
         elif state == 'lost' or state == 'won':
             description = 'Матч проигран ❌' if state == 'lost' else 'Матч выигран 🎉'
             description += f"{hangman.data.hangmans[session.errors]}" if state == 'lost' else f"{hangman.data.happy_hangman}"
-            embed = self.get_ended_embed(description, session)
+            embed = self.ended_embed(description, session)
             embed.colour = discord.Color.red() if state == 'lost' else discord.Color.green()
         await message.delete()
         await reply_message.edit(embed=embed)
@@ -113,14 +113,14 @@ class HangmanCommand(commands.Cog):
         session = kwargs.get('session')
         players = session.players
         content = kwargs.get('content')
+        word = session.word
 
-        if not session.launched or (len(content) != 1 and len(content) != len(session.word)):
+        if not session.launched or not word.can_guess(content):
             return 'ignore'
         if not user == players.current.user:
             return 'ignore'
 
         player = players.current
-        word = session.word
         guesses = word.guess(content) if len(content) == 1 else word.guess_completely(content)
         if guesses > 0:
             player.guesses += guesses
@@ -144,24 +144,24 @@ class HangmanCommand(commands.Cog):
             players.set_winner(player)
             state = 'won'
         if state == 'lost' or state == 'won':
-            self.manager.remove_session(session.message.id)
+            session.close()
         return state
 
-    def get_launch_embed(self, session):
+    def launch_embed(self, session):
         players = session.players
         description = f"Матч по тематике **{session.theme}**\n\n"
 
         for player in players:
             description += f"☑️ {player.name}\n"
-        if not session.full():
+        if not session.full:
             description += f"\nНажмите 🚪, чтобы присоединиться!\n"
-        if players.ready():
+        if players.ready:
             description += f"{players.current.name}, для начала игры нажмите ▶️"
         embed = discord.Embed(
             title="Виселица", description=description, colour=discord.Color.blue())
         return embed
 
-    def get_guessing_embed(self, desc, session):
+    def guessing_embed(self, desc, session):
         description = f"{desc}"
         description += f"{hangman.data.hangmans[session.errors]}\n\n"
         embed = discord.Embed(
@@ -175,7 +175,7 @@ class HangmanCommand(commands.Cog):
                         value=session.word.formatted_encrypted, inline=False)
         return embed
 
-    def get_ended_embed(self, desc, session):
+    def ended_embed(self, desc, session):
         description = f"{desc}\n"
         description += "**Счет:**\n"
         for player in sorted(session.players, key=lambda p: p.guesses, reverse=True):

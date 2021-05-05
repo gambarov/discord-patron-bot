@@ -26,15 +26,35 @@ class GamePlayerList(collections.MutableSequence):
         player = self.find(player.user)
         if player:
             player.ignored = True
-        for player in self._players:
-            if not player.ignored:
-                return
-        self.lost = True
 
     def find(self, user: config.UserType) -> GamePlayer:
         for player in self._players:
             if player.user == user:
                 return player
+
+    @property
+    def full(self) -> bool:
+        return len(self._players) >= self.maxlen
+
+    @property
+    def ready(self) -> bool:
+        length = len(self._players)
+        return length >= self.minlen and length % self.step == 0
+
+    @property
+    def lost(self) -> bool:
+        if not hasattr(self, '_lost'):
+            self._lost = False
+        for player in self._players:
+            if not player.ignored:
+                self._lost = False
+                return False
+        self._lost = True                
+        return True
+
+    @lost.setter
+    def lost(self, value: bool) -> None:
+        setattr(self, '_lost', value)
 
     @property
     def winners(self) -> list:
@@ -58,7 +78,7 @@ class GamePlayerList(collections.MutableSequence):
                     return player
 
     def insert(self, index, player: GamePlayer) -> None:
-        if self.full() or self.find(player.user):
+        if self.full or self.find(player.user):
             return
         self._deque.insert(index, player)
         self._players.insert(index, player)
@@ -71,13 +91,6 @@ class GamePlayerList(collections.MutableSequence):
         if player.ignored:
             return self.pop()
         return player
-
-    def full(self) -> bool:
-        return len(self._players) >= self.maxlen
-
-    def ready(self) -> bool:
-        l = len(self._players)
-        return l >= self.minlen and l % self.step == 0
 
     def __len__(self) -> int:
         return len(self._players)

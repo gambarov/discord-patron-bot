@@ -1,6 +1,8 @@
-import discord
+import os, discord
+from dotenv import load_dotenv
+load_dotenv()
 
-PRIVATE = False
+PRIVATE = os.getenv('PRIVATE_MODE', 'FALSE') == 'TRUE'
 
 intents = discord.Intents().all()
 
