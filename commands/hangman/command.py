@@ -12,8 +12,7 @@ logger = logging.getLogger(__name__)
 class HangmanCommand(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.manager = games.GameManager(
-            states=['ignore', 'new_player', 'launched', 'guessed', 'wrong', 'wrong_ignore', 'lost', 'won'])
+        self.manager = bot.get_cog('GameManager')
         self.themes = hangman.data.themes()
 
     @commands.check_any(commands.guild_only())
@@ -23,12 +22,15 @@ class HangmanCommand(commands.Cog):
         if not theme in self.themes:
             return await ctx.send(embed=helper.get_error_embed(desc="Данной тематики не существует!"))
         word = hangman.HangmanWord(random.choice(self.themes[theme]))
+
         session = games.GameSession(
             self.manager, None, 2, 8, 1, theme=theme, word=word, errors=0)
         session.players.append(games.GamePlayer(ctx.author, guesses=0))
         session.message = await ctx.send(embed=self.launch_embed(session))
-        self.manager.add_session(session)
         await session.message.add_reaction('🚪')
+        session.add_handler('on_message', self.on_message)
+        session.add_handler('on_reaction_add', self.on_reaction_add)
+        self.manager.add_session(session)
 
     @execute.command(name="темы")
     async def send_themes(self, ctx):
@@ -37,115 +39,74 @@ class HangmanCommand(commands.Cog):
             description += f"**{theme}**: {len(words)} слов\n"
         await ctx.send(embed=discord.Embed(title="📜 Доступные темы", description=description, colour=discord.Color.blue()))
 
-    @commands.Cog.listener()
-    async def on_reaction_add(self, reaction, user):
-        if user == self.bot.user:
-            return
-        message = reaction.message
-        session = self.manager.get_session(message.id)
-        # Сообщение - не сессия игры
-        if not session:
-            return
-        state = await self.process_game_launch(session=session, user=user, emoji=reaction.emoji)
-        if state == 'ignore':
-            return
-
+    async def on_reaction_add(self, session, reaction, user):
+        emoji = reaction.emoji
         players = session.players
-
-        if state == 'new_player':
-            embed = self.launch_embed(session)
-            if players.ready:
-                await message.add_reaction('▶️')
-        elif state == 'launched':
-            await message.clear_reactions()
-            embed = self.guessing_embed(
-                "⭐ Матч начался! Чтобы походить, отправьте мне букву", session)
-        await message.edit(embed=embed)
-
-    @games.handler
-    async def process_game_launch(self, **kwargs):
-        user = kwargs.get('user')
-        session = kwargs.get('session')
-        emoji = kwargs.get('emoji')
-        players = session.players
-
         if session.launched:
-            return 'ignore'
+            return
         if emoji == '🚪' and not session.launched:
             if user in players:
-                return 'ignore'
+                return
             players.append(games.GamePlayer(user, guesses=0))
-            return 'new_player'
+            embed = self.launch_embed(session)
+            if players.ready:
+                await session.message.add_reaction('▶️')
         elif emoji == '▶️' and players.ready and user == players.current.user:
             session.launch()
-            return 'launched'
-        return 'ignore'
+            await session.message.clear_reactions()
+            embed = self.guessing_embed(
+                "⭐ Матч начался! Чтобы походить, отправьте мне букву", session)
+        await session.message.edit(embed=embed)
 
-    @commands.Cog.listener()
-    async def on_message(self, message):
-        # Пытаемся получить сообщение, на который пришел ответ
-        reply_message = getattr(
-            getattr(message, 'reference', None), 'cached_message', None)
-        if not reply_message:
-            return
-        session = self.manager.get_session(reply_message.id)
-        if not session:
-            return
-        state = await self.process_game_guessing(session=session, user=message.author, content=message.content)
-        if state == 'ignore':
-            return
-        if state == 'guessed' or state == 'wrong' or state == 'wrong_ignore':
-            action = 'угадывает ✅' if state == 'guessed' else 'ошибается ❌'
-            action = 'выбывает из игры ❌' if state == 'wrong_ignore' else action
-            description = f"🤔 {message.author.display_name} выбирает **{message.content.upper()}** и {action}"
-            embed = self.guessing_embed(description, session)
-        elif state == 'lost' or state == 'won':
-            description = 'Матч проигран ❌' if state == 'lost' else 'Матч выигран 🎉'
-            description += f"{hangman.data.hangmans[session.errors]}" if state == 'lost' else f"{hangman.data.happy_hangman}"
-            embed = self.ended_embed(description, session)
-            embed.colour = discord.Color.red() if state == 'lost' else discord.Color.green()
+    async def on_message(self, session, message, user):
         await message.delete()
-        await reply_message.edit(embed=embed)
 
-    @games.handler
-    async def process_game_guessing(self, **kwargs):
-        user = kwargs.get('user')
-        session = kwargs.get('session')
         players = session.players
-        content = kwargs.get('content')
+        content = message.content
         word = session.word
 
         if not session.launched or not word.can_guess(content):
-            return 'ignore'
+            return
         if not user == players.current.user:
-            return 'ignore'
+            return
 
         player = players.current
-        guesses = word.guess(content) if len(content) == 1 else word.guess_completely(content)
+        guesses = word.guess(content) if len(
+            content) == 1 else word.guess_completely(content)
         if guesses > 0:
             player.guesses += guesses
-            state = 'guessed'
+            description = f"🤔 {player.name} выбирает **{message.content.upper()}** и угадывает ✅"
         else:
             players.pop()
             session.errors += 1
-            state = 'wrong'
+            description = f"🤔 {player.name} выбирает **{message.content.upper()}** и ошибается ❌"
             # Игрок пытался отгадать целое слово
             if len(content) > 1:
                 players.ignore(player)
-                state = 'wrong_ignore'
+                description = f"🤔 {player.name} выбирает **{message.content.upper()}** и выбывает из игры ❌"
             # Если все игроки в игноре, то автолуз
             if players.lost:
-                state = 'lost'
                 session.errors = len(hangman.data.hangmans)-1
 
         if session.errors == len(hangman.data.hangmans)-1 and not word.completed:
-            state = 'lost'
-        elif word.completed:
-            players.set_winner(player)
-            state = 'won'
-        if state == 'lost' or state == 'won':
             session.close()
-        return state
+            embed = self.ended_embed(f"Матч проигран ❌ {hangman.data.hangmans[session.errors]}", session)
+            embed.colour = discord.Color.red()
+        elif word.completed:
+            session.close()
+            players.set_winner(player)
+            embed = self.ended_embed(f"Матч выигран 🎉 {hangman.data.happy_hangman}", session)
+            embed.colour = discord.Color.green()
+        elif player == players.current:
+            description = f"🤔 {player.name} выбирает **{content.upper()}** и угадывает ✅"
+            embed = self.guessing_embed(description, session)
+        elif player.ignored:
+            description = f"🤔 {player.name} выбирает **{content.upper()}** и выбывает из игры ❌"
+            embed = self.guessing_embed(description, session)
+        else:
+            description = f"🤔 {player.name} выбирает **{content.upper()}** и ошибается ❌"
+            embed = self.guessing_embed(description, session)
+        await session.message.edit(embed=embed)
 
     def launch_embed(self, session):
         players = session.players
@@ -186,10 +147,6 @@ class HangmanCommand(commands.Cog):
         embed.add_field(
             name="Слово", value=session.word.formatted_original)
         return embed
-
-    @commands.Cog.listener()
-    async def on_message_delete(self, message):
-        self.manager.remove_session(message.id)
 
     async def cog_command_error(self, ctx, error):
         if isinstance(error, commands.MissingRequiredArgument):

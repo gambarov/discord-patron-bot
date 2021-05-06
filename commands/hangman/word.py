@@ -29,6 +29,8 @@ class HangmanWord():
         return 0
 
     def can_guess(self, text: str) -> bool:
+        if text in self.encrypted:
+            return False
         return len(text) == 1 or len(text) == self.__len__()
 
     @property

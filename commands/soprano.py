@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 class SopranoCommand(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.manager = games.GameManager(states=['ignore', 'shot'])
+        self.manager = bot.get_cog('GameManager')
 
     @commands.command(name="сопрано", help="русская рулетка")
     async def execute(self, ctx):
@@ -19,49 +19,30 @@ class SopranoCommand(commands.Cog):
             title="Русская рулетка", description="🎲 Испытай свою удачу!", colour=discord.Color.blue())
         message = await ctx.send(embed=embed)
         await message.add_reaction('🔫')
-        self.manager.add_session(games.GameSession(self.manager, message, 1, 99, 1))
+        session = games.GameSession(self.manager, message, 1, 99, 1)
+        session.add_handler('on_reaction_add', self.on_reaction_add)
+        self.manager.add_session(session)
 
-    @commands.Cog.listener()
-    async def on_reaction_add(self, reaction, user):
-        if user == self.bot.user or reaction.emoji != '🔫':
+    async def on_reaction_add(self, session, reaction, user):
+        if user in session.players or reaction.emoji != '🔫':
             return
-        message = reaction.message
-        session = self.manager.get_session(message.id)
-        # Сообщение - не игровая сессия
-        if not session:
-            return
-        state = await self.process_game(session=session, user=user)
-        if state == 'ignore':
-            return
+        session.players.append(games.GamePlayer(user, dead=self.possibly()))
 
         embed = discord.Embed(
             title="Русская рулетка", description="🎲 Испытай свою удачу!", colour=discord.Color.green())
 
+        message = session.message
         for player in session.players:
             if not player.dead:
                 embed.add_field(name=player.name,
                                 value="🎉 Выжил", inline=False)
             else:
+                session.close()
                 embed.add_field(name=player.name,
                                 value="☠️ Застрелился", inline=False)
                 embed.colour = discord.Color.red()
                 await message.clear_reactions()
         await message.edit(embed=embed)
-
-    @games.handler
-    async def process_game(self, **kwargs):
-        user = kwargs.get('user')
-        session = kwargs.get('session')
-        if user in session.players:
-            return 'ignore'
-        session.players.append(games.GamePlayer(user, dead=self.possibly()))
-        if session.players.current.dead:
-                self.manager.remove_session(session.message.id)
-        return 'shot'
-
-    @commands.Cog.listener()
-    async def on_message_delete(self, message):
-        self.manager.remove_session(message.id)
 
     async def cog_command_error(self, ctx, error):
         logger.exception(error)

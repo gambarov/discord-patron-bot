@@ -16,7 +16,7 @@ emojis = ['❌', '⭕']
 class TicTacToe(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.manager = games.GameManager(states=['ignore', 'preparing', 'playing', 'draw', 'won'])
+        self.manager = bot.get_cog('GameManager')
 
     @commands.command(name="тик", help="крестики-нолики!")
     @commands.check_any(commands.guild_only())
@@ -36,34 +36,25 @@ class TicTacToe(commands.Cog):
 
         embed.set_footer(text="👀 Ожидание игроков...")
         await message.edit(embed=embed)
-        session = self.manager.add_session(games.GameSession(self.manager, message, 2, 2, 1, grid=grid))
+        session = games.GameSession(self.manager, message, 2, 2, 1, grid=grid)
+        session.add_handler('on_reaction_add', self.on_reaction_add)
+        self.manager.add_session(session)
         # Сразу переводим флаг, т.е. готовность при полном кол-ве игроков
         session.launch()
 
-    @commands.Cog.listener()
-    async def on_reaction_add(self, reaction, user):
-        if user == self.bot.user:
-            return
-        message = reaction.message
-        session = self.manager.get_session(message.id)
-        # Сообщение - не сессия игры
-        if not session:
-            return
-
-        state = await self.process_game(session=session, user=user, emoji=reaction.emoji)
-        if state == 'ignore':
-            return
-
+    async def on_reaction_add(self, session, reaction, user):
+        emoji = reaction.emoji
         grid = session.grid
 
-        embed = discord.Embed(
-            title="Крестики-нолики", description=str(grid), colour=helper.get_discord_color('info'))
+        # В клетку уже походили
+        if not grid.has(emoji):
+            return
 
         def add_players_info(embed, session: games.GameSession, about_current: bool):
             players = session.players
             for index, player in enumerate(players):
                 embed.add_field(name=f"Игрок #{index+1}", value=player.mention)
-            if about_current and session.ready:
+            if about_current and session.launched:
                 # Получаем инфу о след игроке
                 current = players.current
                 if current:
@@ -72,77 +63,48 @@ class TicTacToe(commands.Cog):
             return embed
 
         players = session.players
-        embed = add_players_info(
-            embed, session, True if state == 'playing' else False)
 
-        if state == 'preparing':
-            embed.description = str(grid)
-            embed.set_footer(text="👀 Ожидание игроков...")
-        elif state == 'playing':
-            pass
-        else:
-            # Партия закончена, можно очищать
-            self.manager.remove_session(message.id)
-            if state == 'won':
-                winner = players.winners[0]
-                embed.add_field(
-                    name="🏆 Победитель:", value=winner.mention, inline=False)
-                embed.colour = helper.get_discord_color('success')
-            elif state == 'draw':
-                embed.add_field(name="Игра завершена",
-                                value="🍻 Ничья!", inline=False)
-                embed.colour = helper.get_discord_color('warning')
-        await message.edit(embed=embed)
-
-    @games.handler
-    async def process_game(self, **kwargs):
-        session = kwargs.get('session')
-        emoji = kwargs.get('emoji')
-        grid = session.grid
-
-        # В клетку уже походили
-        if not grid.has(emoji):
-            return 'ignore'
-
-        state = 'playing'
-        players = session.players
-        user = kwargs.get('user')
-
-        # Подготовка сессии
         if not session.full:
-            state = 'preparing'
             players.append(games.GamePlayer(user, emoji=emojis[len(players)]))
-            # Сессия заполнена
-            if session.full:
-                state = 'playing'
 
         # Ход может сделать только текущий и сущ в сессии игрок
         player = players.find(user)
         if not player:
-            logger.info(f"Player doesnt exist, ignoring...")
-            return 'ignore'
+            return
         else:
-            logger.info(f"Player '{player.user.name}' wanna make a move")
             first_player_abuse = (len(players) == 1 and grid.move_count == 1)
             if not player == players.current or first_player_abuse:
                 if first_player_abuse:
                     players.pop()
-                logger.info("Not a current player, ignoring...")
-                return 'ignore'
+                return
         # Убираем кнопку с ячейкой
         await session.message.clear_reaction(emoji)
         # Сдвигаем очередь
         players.pop()
         # Помечаем на поле
         grid.replace(emoji, player.emoji)
+        embed = discord.Embed(
+            title="Крестики-нолики", description=str(grid), colour=helper.get_discord_color('info'))
         # Игрок сделал выйгрышный ход
         if self.check_for_winner(session):
+            session.close()
             players.set_winner(player)
-            state = 'won'
+            embed = add_players_info(embed, session, False)
+            winner = players.winners[0]
+            embed.add_field(name="🏆 Победитель:", value=winner.mention, inline=False)
+            embed.colour = helper.get_discord_color('success')
         # Все поля помечены, ничья
         elif (grid.move_count == pow(grid.size, 2)):
-            state = 'draw'
-        return state
+            session.close()
+            embed = add_players_info(embed, session, False)
+            embed.add_field(name="Игра завершена", value="🍻 Ничья!", inline=False)
+            embed.colour = helper.get_discord_color('warning')
+        elif session.full:
+            embed = add_players_info(embed, session, True)
+        elif not session.full:
+            embed = add_players_info(embed, session, False)
+            embed.set_footer(text="👀 Ожидание игроков...")
+        await session.message.edit(embed=embed)
 
     def check_for_winner(self, session: games.GameSession):
         for player in session.players:
@@ -178,10 +140,6 @@ class TicTacToe(commands.Cog):
             matrix = session.grid.matrix
             if check_matrix(matrix):
                 return True
-
-    @commands.Cog.listener()
-    async def on_message_delete(self, message):
-        self.manager.remove_session(message.id)
 
     async def cog_command_error(self, ctx, error):
         if isinstance(error, commands.BadArgument):

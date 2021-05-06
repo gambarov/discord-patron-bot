@@ -3,7 +3,7 @@ from discord.ext.commands import Bot
 from utils import files
 from config import options, PRIVATE, testers_id
 from dotenv import load_dotenv
-
+from commands.ext.games import GameManager
 
 bot = Bot(**options())
 
@@ -18,6 +18,7 @@ if __name__ == "__main__":
 
     logging.config.fileConfig('logs/config.cfg')
 
+    bot.add_cog(GameManager(bot))
     load_extensions('commands')
     bot.load_extension('commands.market.command')
     bot.load_extension('commands.tictactoe.command')
