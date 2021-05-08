@@ -43,18 +43,10 @@ class GamePlayerList(collections.MutableSequence):
 
     @property
     def lost(self) -> bool:
-        if not hasattr(self, '_lost'):
-            self._lost = False
         for player in self._players:
             if not player.ignored:
-                self._lost = False
                 return False
-        self._lost = True                
         return True
-
-    @lost.setter
-    def lost(self, value: bool) -> None:
-        setattr(self, '_lost', value)
 
     @property
     def winners(self) -> list:

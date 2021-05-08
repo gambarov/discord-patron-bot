@@ -59,8 +59,6 @@ class HangmanCommand(commands.Cog):
         await session.message.edit(embed=embed)
 
     async def on_message(self, session, message, user):
-        await message.delete()
-
         players = session.players
         content = message.content
         word = session.word
@@ -75,37 +73,36 @@ class HangmanCommand(commands.Cog):
             content) == 1 else word.guess_completely(content)
         if guesses > 0:
             player.guesses += guesses
-            description = f"🤔 {player.name} выбирает **{message.content.upper()}** и угадывает ✅"
         else:
             players.pop()
             session.errors += 1
-            description = f"🤔 {player.name} выбирает **{message.content.upper()}** и ошибается ❌"
             # Игрок пытался отгадать целое слово
             if len(content) > 1:
                 players.ignore(player)
-                description = f"🤔 {player.name} выбирает **{message.content.upper()}** и выбывает из игры ❌"
-            # Если все игроки в игноре, то автолуз
-            if players.lost:
-                session.errors = len(hangman.data.hangmans)-1
 
-        if session.errors == len(hangman.data.hangmans)-1 and not word.completed:
+        if players.lost or (session.errors == len(hangman.data.hangmans)-1 and not word.completed):
             session.close()
-            embed = self.ended_embed(f"Матч проигран ❌ {hangman.data.hangmans[session.errors]}", session)
+            embed = self.ended_embed(
+                f"Матч проигран ❌ {hangman.data.hangmans[len(hangman.data.hangmans)-1]}", session)
             embed.colour = discord.Color.red()
         elif word.completed:
             session.close()
             players.set_winner(player)
-            embed = self.ended_embed(f"Матч выигран 🎉 {hangman.data.happy_hangman}", session)
+            embed = self.ended_embed(
+                f"Матч выигран 🎉 {hangman.data.happy_hangman}", session)
             embed.colour = discord.Color.green()
+        # если все еще текущий - буква отгадана
         elif player == players.current:
             description = f"🤔 {player.name} выбирает **{content.upper()}** и угадывает ✅"
             embed = self.guessing_embed(description, session)
+        # попытался отгадать слово целиком
         elif player.ignored:
             description = f"🤔 {player.name} выбирает **{content.upper()}** и выбывает из игры ❌"
             embed = self.guessing_embed(description, session)
         else:
             description = f"🤔 {player.name} выбирает **{content.upper()}** и ошибается ❌"
             embed = self.guessing_embed(description, session)
+        await message.delete()
         await session.message.edit(embed=embed)
 
     def launch_embed(self, session):
