@@ -91,8 +91,7 @@ class HangmanCommand(commands.Cog):
             embed = self.ended_embed(
                 f"Матч выигран 🎉 {hangman.data.happy_hangman}", session)
             embed.colour = discord.Color.green()
-        # если все еще текущий - буква отгадана
-        elif player == players.current:
+        elif guesses > 0:
             description = f"🤔 {player.name} выбирает **{content.upper()}** и угадывает ✅"
             embed = self.guessing_embed(description, session)
         # попытался отгадать слово целиком
