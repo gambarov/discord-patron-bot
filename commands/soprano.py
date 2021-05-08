@@ -35,7 +35,7 @@ class SopranoCommand(commands.Cog):
         for player in session.players:
             if not player.dead:
                 embed.add_field(name=player.name,
-                                value="🎉 Выжил", inline=False)
+                                value="✌️ Выжил", inline=False)
             else:
                 session.close()
                 embed.add_field(name=player.name,

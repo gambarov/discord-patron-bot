@@ -27,7 +27,6 @@ class GameGrid():
                     return True
 
     def replace(self, cell_emoji, player_emoji):
-        index = 1
         for i in range(len(self.matrix)):
             for j in range(len(self.matrix[i])):
                 emoji = self.matrix[i][j]['emoji']

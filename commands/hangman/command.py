@@ -55,7 +55,7 @@ class HangmanCommand(commands.Cog):
             session.launch()
             await session.message.clear_reactions()
             embed = self.guessing_embed(
-                "⭐ Матч начался! Чтобы походить, отправьте мне букву", session)
+                "⭐ Матч начался! Чтобы походить, отправьте мне букву!", session)
         await session.message.edit(embed=embed)
 
     async def on_message(self, session, message, user):
@@ -82,24 +82,22 @@ class HangmanCommand(commands.Cog):
 
         if players.lost or (session.errors == len(hangman.data.hangmans)-1 and not word.completed):
             session.close()
-            embed = self.ended_embed(
-                f"Матч проигран ❌ {hangman.data.hangmans[len(hangman.data.hangmans)-1]}", session)
+            embed = self.ended_embed("Матч проигран... 🤦", False, session)
             embed.colour = discord.Color.red()
         elif word.completed:
             session.close()
             players.set_winner(player)
-            embed = self.ended_embed(
-                f"Матч выигран 🎉 {hangman.data.happy_hangman}", session)
+            embed = self.ended_embed("Матч выигран! ✌️", True, session)
             embed.colour = discord.Color.green()
         elif guesses > 0:
-            description = f"🤔 {player.name} выбирает **{content.upper()}** и угадывает ✅"
+            description = f"{player.mention} выбирает **{content.upper()}** и угадывает ☑️"
             embed = self.guessing_embed(description, session)
         # попытался отгадать слово целиком
         elif player.ignored:
-            description = f"🤔 {player.name} выбирает **{content.upper()}** и выбывает из игры ❌"
+            description = f"{player.mention} выбирает **{content.upper()}** и выбывает из игры ♿"
             embed = self.guessing_embed(description, session)
         else:
-            description = f"🤔 {player.name} выбирает **{content.upper()}** и ошибается ❌"
+            description = f"{player.mention} выбирает **{content.upper()}** и ошибается 🙅‍♂️"
             embed = self.guessing_embed(description, session)
         await message.delete()
         await session.message.edit(embed=embed)
@@ -119,29 +117,29 @@ class HangmanCommand(commands.Cog):
         return embed
 
     def guessing_embed(self, desc, session):
-        description = f"{desc}"
-        description += f"{hangman.data.hangmans[session.errors]}\n\n"
         embed = discord.Embed(
-            title="Виселица", description=description, colour=discord.Color.blue())
+            title="Виселица", description=desc, colour=discord.Color.blue())
+        embed.add_field(name="\u200b", value=hangman.data.hangmans[session.errors], inline=False)
         embed.add_field(name="Текущий ход",
                         value=session.players.current.mention, inline=False)
         if session.word.used:
             embed.add_field(name="Уже использовали", value=", ".join(
-                str(letter).upper() for letter in session.word.used))
+                str(letter).upper() for letter in session.word.used), inline=False)
         embed.add_field(name="Слово",
                         value=session.word.formatted_encrypted, inline=False)
         return embed
 
-    def ended_embed(self, desc, session):
-        description = f"{desc}\n"
-        description += "**Счет:**\n"
-        for player in sorted(session.players, key=lambda p: p.guesses, reverse=True):
-            description += f"**{player.name}** - {player.guesses}"
-            description += " 🏆\n" if player.winner else "\n"
+    def ended_embed(self, desc, win, session):
         embed = discord.Embed(
-            title="Виселица", description=description, colour=discord.Color.blue())
+            title="Виселица", description=desc, colour=discord.Color.green() if win else discord.Color.red())
+        embed.add_field(name="\u200b", value=hangman.data.happy_hangman if win else hangman.data.hangmans[len(hangman.data.hangmans)-1], inline=False)
+        results = ""
+        for player in sorted(session.players, key=lambda p: p.guesses, reverse=True):
+            results += f"**{player.name}** - {player.guesses}"
+            results += " 🏆\n" if player.winner else "\n"
+        embed.add_field(name="Счет:", value=results, inline=False)
         embed.add_field(
-            name="Слово", value=session.word.formatted_original)
+            name="Слово", value=session.word.formatted_original, inline=False)
         return embed
 
     async def cog_command_error(self, ctx, error):
