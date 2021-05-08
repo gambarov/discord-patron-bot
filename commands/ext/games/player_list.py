@@ -15,7 +15,6 @@ class GamePlayerList(collections.MutableSequence):
         self.minlen = minlen
         self.maxlen = maxlen
         self.step = step
-        self.lost = False
 
     def set_winner(self, winner: GamePlayer) -> None:
         player = self.find(winner.user)
@@ -43,6 +42,8 @@ class GamePlayerList(collections.MutableSequence):
 
     @property
     def lost(self) -> bool:
+        if not self._players:
+            return False
         for player in self._players:
             if not player.ignored:
                 return False
