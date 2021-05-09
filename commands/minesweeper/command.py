@@ -24,20 +24,25 @@ class MinesweeperCommand(commands.Cog):
             name="Помощь", value="Чтобы походить, отправь мне код клетки (например, c4)\nЧтобы пометить клетку флагом, добавь в конце f (например, c4f)", inline=False)
 
         message = await ctx.send(embed=embed)
-        session = games.GameSession(self.manager, message, 1, 4, grid=grid)
+        session = games.GameSession(self.manager, message, 1, 4, 1, grid=grid)
         session.add_handler('on_message', self.on_message)
         session.launch()
         self.manager.add_session(session)
 
     async def on_message(self, session, message, user):
         grid = session.grid
-        if not grid.move(message.content):
+        guesses = grid.move(message.content)
+        if not guesses:
             return
+        elif type(guesses) is int:
+            # Добавляем игрока если еще не существует
+            session.players.append(games.GamePlayer(user, guesses=0))
+            session.players.find(user).guesses += guesses
+            logger.info(f"Got {guesses} points from open!")
 
         await message.delete()
 
-        embed = discord.Embed(title="Сапер", description=str(
-            grid), colour=discord.Color.blue())
+        embed = discord.Embed(title="Сапер", description="None", colour=discord.Color.blue())
 
         if not grid.completed:
             embed.add_field(
@@ -45,11 +50,16 @@ class MinesweeperCommand(commands.Cog):
         else:
             session.close()
             if grid.lost:
-                embed.add_field(name="Игра завершена", value="Вы проиграли!")
+                embed.add_field(name="Игра завершена", value="Вы проиграли!", inline=False)
                 embed.colour = discord.Color.red()
             else:
-                embed.add_field(name="Игра завершена", value="Вы выиграли!")
+                embed.add_field(name="Игра завершена", value="Вы выиграли!", inline=False)
                 embed.colour = discord.Color.green()
+            results = ""
+            for player in session.players:
+                results += f"**{player.name}** - {player.guesses}"
+            embed.add_field(name="Счет:", value=results, inline=False)
+        embed.description = str(grid)
         await session.message.edit(embed=embed)
 
     async def cog_command_error(self, ctx, error):

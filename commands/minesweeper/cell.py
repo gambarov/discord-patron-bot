@@ -1,5 +1,9 @@
 import abc
-from emojis import *
+import logging
+from .emojis import *
+
+logger = logging.getLogger(__name__)
+
 
 class Cell():
     def __init__(self, grid, i: int, j: int, emoji: str) -> None:
@@ -33,6 +37,7 @@ class GameCell(Cell, metaclass=abc.ABCMeta):
             return False
         self._opened = True
         self.emoji = self.open_emoji
+        logger.info(f"Open cell in {type(self)}")
         return True
 
     @property
@@ -57,11 +62,7 @@ class GameCell(Cell, metaclass=abc.ABCMeta):
 class BombCell(GameCell):
     def __init__(self, grid, i: int, j: int) -> None:
         super().__init__(grid, i, j)
-
-    def open(self):
-        if super().open():
-            return self.grid.open(True)
-
+        
     @property
     def open_emoji(self):
         return misc['bomb']
@@ -74,16 +75,17 @@ class RegularCell(GameCell):
 
     def open(self):
         if super().open():
-            if self.num > 0:
-                return True
-            else:
+            guesses = 1
+            if self.num == 0:
                 n = self.neighbors()
                 for i in range(len(n)):
                     for j in range(len(n)):
                         cell = n[i][j]
                         if isinstance(cell, RegularCell):
-                            cell.open()
-                return True
+                            subguesses = cell.open()
+                            if type(subguesses) is int:
+                                guesses += subguesses 
+            return guesses
 
     @property
     def open_emoji(self):

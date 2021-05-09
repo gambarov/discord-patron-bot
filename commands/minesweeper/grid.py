@@ -1,7 +1,10 @@
 import random
 import collections
+import logging
 from .emojis import *
 from .cell import Cell, GameCell, BombCell, RegularCell
+
+logger = logging.getLogger(__name__)
 
 
 def get_emoji(emoji_list: dict, index: int):
@@ -30,7 +33,7 @@ def ij_from_code(size, code: str):
 
 class GameGrid():
     def __init__(self, size) -> None:
-        self.size = max(min(10, size+1), 7)
+        self.size = max(min(10, size+1), 3)
         self.generate()
         self.lost = False
         self.opened = False
@@ -59,6 +62,7 @@ class GameGrid():
         # Задаем
         for i in range(0, self.size-1):
             bi, bj = bombs_i[i], bombs_j[i]
+            print(f"Set bomb in ({list(letters.keys())[bj-1]}, {bi})")
             bcell = self.set_cell(bi, bj, BombCell(self, bi, bj))
             # Получаем соседние клетки
             n = bcell.neighbors()
@@ -91,7 +95,7 @@ class GameGrid():
             else:
                 cell = self.get_cell(pos.i, pos.j)
                 if isinstance(cell, GameCell):
-                    cell.flag = True
+                    cell.flag = not cell.flag
                     return True
                 return False
         elif not len(data) == 2:
@@ -103,8 +107,11 @@ class GameGrid():
 
         cell = self.get_cell(pos.i, pos.j)
         if isinstance(cell, GameCell):
-            return cell.open()
-
+            if isinstance(cell, RegularCell):
+                return cell.open()
+            elif isinstance(cell, BombCell):
+                return self.open(True)
+            
     def open(self, lost=False):
         self.lost = lost
         self.opened = True
@@ -118,15 +125,17 @@ class GameGrid():
     @property
     def completed(self):
         if self.lost or self.opened:
+            logger.info(f"Completed cause lost ({self.lost}) or opened ({self.opened})")
             return True
         for i in range(self.size):
             for j in range(self.size):
                 cell = self.matrix[i][j]
                 if isinstance(cell, RegularCell):
                     if not cell.opened:
+                        logger.info(f"Not completed cause cell in ({cell.j}, {cell.i}) not opened yet")
                         return False
-        self.open(False)
-        return True
+        logger.info(f"Completed, open all cells!")
+        return self.open()
 
     def __str__(self) -> str:
         result = ""
