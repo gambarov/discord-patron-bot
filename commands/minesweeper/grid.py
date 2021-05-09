@@ -62,7 +62,7 @@ class GameGrid():
         # Задаем
         for i in range(0, self.size-1):
             bi, bj = bombs_i[i], bombs_j[i]
-            print(f"Set bomb in ({list(letters.keys())[bj-1]}, {bi})")
+            logger.info(f"Set bomb in ({list(letters.keys())[bj-1]}, {bi})")
             bcell = self.set_cell(bi, bj, BombCell(self, bi, bj))
             # Получаем соседние клетки
             n = bcell.neighbors()
@@ -125,16 +125,13 @@ class GameGrid():
     @property
     def completed(self):
         if self.lost or self.opened:
-            logger.info(f"Completed cause lost ({self.lost}) or opened ({self.opened})")
             return True
         for i in range(self.size):
             for j in range(self.size):
                 cell = self.matrix[i][j]
                 if isinstance(cell, RegularCell):
                     if not cell.opened:
-                        logger.info(f"Not completed cause cell in ({cell.j}, {cell.i}) not opened yet")
                         return False
-        logger.info(f"Completed, open all cells!")
         return self.open()
 
     def __str__(self) -> str:

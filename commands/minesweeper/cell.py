@@ -37,7 +37,6 @@ class GameCell(Cell, metaclass=abc.ABCMeta):
             return False
         self._opened = True
         self.emoji = self.open_emoji
-        logger.info(f"Open cell in {type(self)}")
         return True
 
     @property

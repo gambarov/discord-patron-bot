@@ -21,7 +21,7 @@ class MinesweeperCommand(commands.Cog):
         embed = discord.Embed(title="Сапер", description=str(
             grid), colour=discord.Color.blue())
         embed.add_field(
-            name="Помощь", value="Чтобы походить, отправь мне код клетки (например, c4)\nЧтобы пометить клетку флагом, добавь в конце f (например, c4f)", inline=False)
+            name="Помощь", value="Для хода отправь мне код клетки (например, d4)\nЧтобы пометить флагом, добавь f (например, d4f)", inline=False)
 
         message = await ctx.send(embed=embed)
         session = games.GameSession(self.manager, message, 1, 4, 1, grid=grid)
@@ -32,17 +32,17 @@ class MinesweeperCommand(commands.Cog):
     async def on_message(self, session, message, user):
         grid = session.grid
         guesses = grid.move(message.content)
+        # Добавляем игрока если еще не существует
+        session.players.append(games.GamePlayer(user, guesses=0))
         if not guesses:
             return
         elif type(guesses) is int:
-            # Добавляем игрока если еще не существует
-            session.players.append(games.GamePlayer(user, guesses=0))
             session.players.find(user).guesses += guesses
-            logger.info(f"Got {guesses} points from open!")
 
         await message.delete()
 
-        embed = discord.Embed(title="Сапер", description="None", colour=discord.Color.blue())
+        embed = discord.Embed(
+            title="Сапер", description="None", colour=discord.Color.blue())
 
         if not grid.completed:
             embed.add_field(
@@ -50,15 +50,22 @@ class MinesweeperCommand(commands.Cog):
         else:
             session.close()
             if grid.lost:
-                embed.add_field(name="Игра завершена", value="Вы проиграли!", inline=False)
+                embed.add_field(name="Игра завершена",
+                                value="Вы проиграли! 🤦", inline=False)
                 embed.colour = discord.Color.red()
             else:
-                embed.add_field(name="Игра завершена", value="Вы выиграли!", inline=False)
+                embed.add_field(name="Игра завершена",
+                                value="Вы выиграли! ✌️", inline=False)
                 embed.colour = discord.Color.green()
+                
             results = ""
-            for player in session.players:
-                results += f"**{player.name}** - {player.guesses} \n"
+            for player in sorted(session.players, key=lambda p: p.guesses, reverse=True):
+                results += f"**{player.name}** - {str(player.guesses)} \n"
             embed.add_field(name="Счет:", value=results, inline=False)
+            
+            delta = message.created_at - session.message.created_at
+            seconds = round(delta.total_seconds())
+            embed.set_footer(text=f"⏱️ Время: {str(seconds)} сек.")
         embed.description = str(grid)
         await session.message.edit(embed=embed)
 
