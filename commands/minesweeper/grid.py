@@ -33,7 +33,7 @@ def ij_from_code(size, code: str):
 
 class GameGrid():
     def __init__(self, size) -> None:
-        self.size = max(min(10, size+1), 3)
+        self.size = max(min(10, size+1), 7)
         self.generate()
         self.lost = False
         self.opened = False

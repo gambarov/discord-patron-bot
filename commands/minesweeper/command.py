@@ -57,7 +57,7 @@ class MinesweeperCommand(commands.Cog):
                 embed.colour = discord.Color.green()
             results = ""
             for player in session.players:
-                results += f"**{player.name}** - {player.guesses}"
+                results += f"**{player.name}** - {player.guesses} \n"
             embed.add_field(name="Счет:", value=results, inline=False)
         embed.description = str(grid)
         await session.message.edit(embed=embed)
