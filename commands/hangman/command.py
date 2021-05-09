@@ -56,6 +56,8 @@ class HangmanCommand(commands.Cog):
             await session.message.clear_reactions()
             embed = self.guessing_embed(
                 "⭐ Матч начался! Чтобы походить, отправьте мне букву!", session)
+        else:
+            return
         await session.message.edit(embed=embed)
 
     async def on_message(self, session, message, user):
