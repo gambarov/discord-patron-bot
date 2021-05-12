@@ -1,5 +1,4 @@
 import random
-import collections
 import logging
 from .emojis import *
 from .cell import Cell, GameCell, BombCell, RegularCell
@@ -26,51 +25,51 @@ def ij_from_code(size, code: str):
     j, i = list(letters.keys()).index(letter) + \
         1, list(numbers.keys()).index(number)+1
     # Выходят за пределы
+    # Индекс < 1 некорректный т.к. на нулевых находятся клетки-координаты (A, B, C...)
     if i > size or j > size or i < 1 or j < 1:
         return None
-    return collections.namedtuple('pos', ['i', 'j'])(i, j)
+    return (i, j)
 
 
 class GameGrid():
     def __init__(self, size) -> None:
         self.size = max(min(10, size+1), 7)
-        self.generate()
         self.lost = False
         self.opened = False
+        self.cells = []
+        self._generate()
 
-    def generate(self):
+    def _generate(self):
         # Генерируем чисто поле
         self.matrix = [[0 for x in range(self.size)] for y in range(self.size)]
         for i in range(self.size):
             for j in range(self.size):
                 if i == 0 and j == 0:
-                    self.matrix[i][j] = Cell(self, i, j, misc['edge'])
+                    cell = self.set_cell(i, j, Cell(self, i, j, misc['edge']))
                 elif i == 0:
-                    self.matrix[i][j] = Cell(
-                        self, i, j, get_emoji(letters, j-1))
+                    cell = self.set_cell(Cell(
+                        self, i, j, get_emoji(letters, j-1)))
                 elif j == 0:
-                    self.matrix[i][j] = Cell(
-                        self, i, j, get_emoji(numbers, i-1))
+                    cell = self.set_cell(Cell(
+                        self, i, j, get_emoji(numbers, i-1)))
                 else:
-                    self.matrix[i][j] = RegularCell(self, i, j)
-
-        # Генерируем координаты для бомб
-        bombs_i = list(range(1, self.size))
-        random.shuffle(bombs_i)
-        bombs_j = list(range(1, self.size))
-        random.shuffle(bombs_j)
-        # Задаем
-        for i in range(0, self.size-1):
-            bi, bj = bombs_i[i], bombs_j[i]
-            logger.info(f"Set bomb in ({list(letters.keys())[bj-1]}, {bi})")
-            bcell = self.set_cell(bi, bj, BombCell(self, bi, bj))
-            # Получаем соседние клетки
-            n = bcell.neighbors()
-            for i in range(len(n)):
-                for j in range(len(n)):
-                    cell = n[i][j]
-                    if isinstance(cell, RegularCell):
-                        cell.num += 1
+                    cell = self.set_cell(RegularCell(self, i, j))
+                self.cells.append(cell)
+        self._spawn_bombs()
+                        
+    def _spawn_bombs(self):
+        # Выбираем клетки, которые пометим, как бомбы
+        cells = random.sample(self.cells, self.size)
+        for cell in cells:
+            logger.info(f"Set bomb in ({list(letters.keys())[cell.i-1]}, {cell.j})")
+            self.set_cell(i, j, BombCell(self, cell.i, cell.j))
+            neighbors = cell.neighbors()
+            for i in range(len(neighbors)):
+                for j in range(len(neighbors)):
+                    neighbor = neighbors[i][j]
+                    # Задаем обычным игровым соседним клеткам кол-во бомб рядом
+                    if isinstance(neighbor, RegularCell):
+                        neighbor.num += 1
 
     def get_cell(self, i, j):
         try:
@@ -88,29 +87,23 @@ class GameGrid():
     def move(self, data):
         if self.opened:
             return False
-        if len(data) == 3 and data[2].lower() == 'f':
-            pos = ij_from_code(self.size, data[:2])
-            if not pos:
-                return False
-            else:
-                cell = self.get_cell(pos.i, pos.j)
-                if isinstance(cell, GameCell):
-                    cell.flag = not cell.flag
-                    return True
-                return False
-        elif not len(data) == 2:
+        if not len(data) in (2, 3):
             return False
-
-        pos = ij_from_code(self.size, data)
+        
+        pos = ij_from_code(self.size, data[:2])
         if not pos:
             return False
-
-        cell = self.get_cell(pos.i, pos.j)
-        if isinstance(cell, GameCell):
-            if isinstance(cell, RegularCell):
-                return cell.open()
-            elif isinstance(cell, BombCell):
-                return self.open(True)
+        cell = self.get_cell(pos[0], pos[1])
+        # Пользователь хочет задать флаг
+        if len(data) == 3 and data[2].lower() == 'f':
+            cell.flag = not cell.flag
+            return True
+        # Пользователь хочет открыть обычную клетку
+        elif isinstance(cell, RegularCell):
+            return cell.open()
+        # Пользователь нарвался на бомбу, проигрываем
+        elif isinstance(cell, BombCell):
+            return self.open(True)
             
     def open(self, lost=False):
         self.lost = lost
