@@ -1,2 +1,2 @@
-# discord-patron-bot
-#discord #bot #python
+# Discord Patron Bot
+Private bot for the Manada Gaming
