@@ -1,3 +1,4 @@
+from itertools import chain
 import random
 import logging
 from .emojis import *
@@ -36,7 +37,6 @@ class GameGrid():
         self.size = max(min(10, size+1), 7)
         self.lost = False
         self.opened = False
-        self.cells = []
         self._generate()
 
     def _generate(self):
@@ -54,12 +54,13 @@ class GameGrid():
                         self, i, j, get_emoji(numbers, i-1)))
                 else:
                     cell = self.set_cell(RegularCell(self, i, j))
-                self.cells.append(cell)
         self._spawn_bombs()
                         
     def _spawn_bombs(self):
         # Выбираем клетки, которые пометим, как бомбы
-        cells = random.sample(self.cells, self.size)
+        # Перед этим преобразуем матрицу в одномерный список
+        cells = random.sample(
+            list(chain.from_iterable(self.matrix)), self.size)
         for cell in cells:
             logger.info(f"Set bomb in ({list(letters.keys())[cell.i-1]}, {cell.j})")
             self.set_cell(i, j, BombCell(self, cell.i, cell.j))
@@ -71,10 +72,10 @@ class GameGrid():
                     if isinstance(neighbor, RegularCell):
                         neighbor.num += 1
 
-    def get_cell(self, i, j):
+    def get_cell(self, i: int, j: int) -> Cell:
         try:
             if i < 0 or j < 0:
-                print("WARNING: got negative indexes!")
+                logger.warning("got negative indexes!")
                 raise IndexError
             return self.matrix[i][j]
         except IndexError:
