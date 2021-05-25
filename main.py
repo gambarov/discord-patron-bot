@@ -20,7 +20,7 @@ if __name__ == "__main__":
 
     bot.add_cog(GameManager(bot))
     load_extensions('commands')
-    bot.load_extension('commands.market.command')
+    bot.load_extension('commands.exchange.command')
     bot.load_extension('commands.tictactoe.command')
     bot.load_extension('commands.hangman.command')
     bot.load_extension('commands.minesweeper.command')

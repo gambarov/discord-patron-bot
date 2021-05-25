@@ -1,7 +1,7 @@
 import discord, logging
 
 from discord.ext import commands
-from commands.market.economy import Economy, EconomyException
+from commands.exchange.economy import Economy, EconomyException
 from utils.helper import get_discord_color, get_error_embed
 
 logger = logging.getLogger('discord')
