@@ -43,6 +43,7 @@ class WeatherCommand(commands.Cog):
             location['name'], location['region'], location['country']), colour=get_discord_color('info'))
         embed.add_field(name="Температура", value="{} ({}) ℃, {}".format(
             current['temp_c'], current['feelslike_c'], current['condition']['text'].lower()), inline=False)
+        embed.set_footer(text="Последнее обновление: {}".format(current['last_updated']))
         return embed
 
 
